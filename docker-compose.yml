@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  stock-prediction:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - SERVER_PORT=8080
+      - LOG_LEVEL=info
+      - LOG_FORMAT=json
+      - STOCK_SYMBOL=NVDA
+      - STOCK_LOOKBACK_DAYS=5
+      - STOCK_BUY_THRESHOLD=1.01
+      - STOCK_SELL_THRESHOLD=0.99
+      - API_TIMEOUT=30s
+      - ML_PREDICTION_TTL=5m
+      # Persistent data paths
+      - ML_MODEL_PATH=/app/persistent_data/ml_models/nvda_lstm_model
+      - ML_SCALER_PATH=/app/persistent_data/scalers/scaler.pkl
+      - STOCK_DATA_CACHE_PATH=/app/persistent_data/stock_data/cache
+      - PREDICTION_CACHE_PATH=/app/persistent_data/stock_data/predictions
+    volumes:
+      # Persistent data volumes
+      - ./persistent_data:/app/persistent_data
+      # Individual service volumes for better organization
+      - ./persistent_data/ml_models:/app/models
+      - ./persistent_data/scalers:/app/scalers
+      - ./persistent_data/logs:/app/logs
+      - ./persistent_data/config:/app/config
+      # Read-only script mount (scripts don't need persistence)
+      - ./scripts:/app/scripts:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      - prometheus
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      # Persistent Prometheus data
+      - ./persistent_data/prometheus:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      # Persistent Grafana data path
+      - GF_PATHS_DATA=/var/lib/grafana
+    volumes:
+      # Persistent Grafana data
+      - ./persistent_data/grafana:/var/lib/grafana
+      # Configuration (read-only)
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    user: "472:472"  # Grafana user ID for proper permissions
+
+networks:
+  default:
+    name: stock-prediction-network

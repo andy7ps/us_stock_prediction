@@ -1,0 +1,24 @@
+# Ignore all data files but keep directory structure
+*
+!.gitignore
+!README.md
+
+# Keep important directories
+!ml_models/
+!stock_data/
+!logs/
+!config/
+!backups/
+!monitoring/
+
+# But ignore their contents
+ml_models/*
+stock_data/*
+logs/*
+config/*
+backups/*
+monitoring/*
+
+# Keep example files
+!*.example
+!*.template
