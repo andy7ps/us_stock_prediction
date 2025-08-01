@@ -118,7 +118,7 @@ cat > "$BACKUP_PATH/backup_info.json" << EOL
   "backup_name": "$BACKUP_NAME",
   "timestamp": "$TIMESTAMP",
   "date": "$(date)",
-  "service": "Stock Prediction Service v3.0",
+  "service": "Stock Prediction Service v3.1.0",
   "backup_type": "full",
   "directories": [
     "ml_models",

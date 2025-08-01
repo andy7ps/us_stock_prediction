@@ -155,7 +155,7 @@ cp -r config "$BACKUP_DIR/" 2>/dev/null || echo "No config to backup"
 
 # Create backup info
 echo "Backup created: $(date)" > "$BACKUP_DIR/backup_info.txt"
-echo "Service version: Stock Prediction v3.0" >> "$BACKUP_DIR/backup_info.txt"
+echo "Service version: Stock Prediction v3.1.0" >> "$BACKUP_DIR/backup_info.txt"
 
 # Compress backup
 tar -czf "$BACKUP_DIR.tar.gz" -C backups "backup_$TIMESTAMP"

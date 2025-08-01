@@ -33,7 +33,7 @@ func main() {
 
 	// Setup logger
 	logger := setupLogger(cfg)
-	logger.Info("Starting Stock Prediction Service v3.0")
+	logger.Info("Starting Stock Prediction Service v3.1.0")
 
 	// Initialize metrics
 	metricsCollector := metrics.NewMetrics()
@@ -138,7 +138,7 @@ func setupRouter(handler *handlers.Handler) *mux.Router {
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		response := map[string]interface{}{
 			"service": "Stock Prediction API",
-			"version": "v3.0",
+			"version": "v3.1.0",
 			"status":  "running",
 			"time":    time.Now().Format(time.RFC3339),
 			"endpoints": map[string]string{

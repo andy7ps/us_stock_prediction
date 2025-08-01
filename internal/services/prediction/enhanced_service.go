@@ -114,7 +114,7 @@ func (s *EnhancedPredictionService) Predict(ctx context.Context, req *models.Pre
 		TradingSignal:  string(signal),
 		Confidence:     confidence,
 		PredictionTime: time.Now(),
-		ModelVersion:   fmt.Sprintf("v3.0-%s", s.predictionConfig.Model),
+		ModelVersion:   fmt.Sprintf("v3.1.0-%s", s.predictionConfig.Model),
 	}
 	
 	// Cache the result
@@ -206,7 +206,7 @@ func (s *EnhancedPredictionService) callEnhancedModel(ctx context.Context, data 
 func (s *EnhancedPredictionService) GetModelInfo() *models.ModelInfo {
 	return &models.ModelInfo{
 		Name:        string(s.predictionConfig.Model),
-		Version:     fmt.Sprintf("v3.0-%s", s.predictionConfig.Model),
+		Version:     fmt.Sprintf("v3.1.0-%s", s.predictionConfig.Model),
 		Description: s.predictionConfig.Model.GetModelDescription(),
 		Features:    s.predictionConfig.Model.GetModelFeatures(),
 		Config: map[string]interface{}{

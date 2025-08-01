@@ -93,7 +93,7 @@ func TestRootEndpoint(t *testing.T) {
 	assert.Contains(t, root, "version")
 	assert.Contains(t, root, "endpoints")
 	assert.Equal(t, "Stock Prediction API", root["service"])
-	assert.Equal(t, "v3.0", root["version"])
+	assert.Equal(t, "v3.1.0", root["version"])
 }
 
 func TestHistoricalDataEndpoint(t *testing.T) {

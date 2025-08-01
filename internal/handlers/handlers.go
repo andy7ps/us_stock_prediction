@@ -126,7 +126,7 @@ func (h *Handler) HealthHandler(w http.ResponseWriter, r *http.Request) {
 	status := &models.HealthStatus{
 		Status:    "healthy",
 		Timestamp: time.Now(),
-		Version:   "v3.0",
+		Version:   "v3.1.0",
 		Services:  make(map[string]string),
 	}
 	

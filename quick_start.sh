@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Stock Prediction Service v3.0 - Quick Start Script
+# Stock Prediction Service v3.1.0 - Quick Start Script
 # This script automates the setup and testing process
 
 set -e  # Exit on any error
@@ -261,7 +261,7 @@ start_with_docker() {
 
 # Main function
 main() {
-    print_header "Stock Prediction Service v3.0 - Quick Start"
+    print_header "Stock Prediction Service v3.1.0 - Quick Start"
     
     # Parse command line arguments
     case "${1:-local}" in
