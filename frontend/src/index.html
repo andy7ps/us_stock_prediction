@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>US Stock Prediction Service</title>
+  <base href="/">
+  
+  <!-- Mobile-first responsive viewport -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=yes, minimum-scale=1, maximum-scale=5">
+  
+  <!-- PWA and Mobile App Support -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Stock Prediction">
+  <meta name="application-name" content="Stock Prediction">
+  <meta name="msapplication-TileColor" content="#667eea">
+  <meta name="theme-color" content="#667eea">
+  
+  <!-- SEO and Social Media -->
+  <meta name="description" content="Enterprise-grade ML-powered stock price prediction service with real-time data and advanced analytics">
+  <meta name="keywords" content="stock prediction, machine learning, financial analysis, stock market, AI">
+  <meta name="author" content="US Stock Prediction Service">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="/">
+  <meta property="og:title" content="US Stock Prediction Service">
+  <meta property="og:description" content="Enterprise-grade ML-powered stock price prediction service">
+  <meta property="og:image" content="/assets/og-image.png">
+  
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="/">
+  <meta property="twitter:title" content="US Stock Prediction Service">
+  <meta property="twitter:description" content="Enterprise-grade ML-powered stock price prediction service">
+  <meta property="twitter:image" content="/assets/twitter-image.png">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
+  
+  <!-- Preconnect to external domains for performance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  <!-- Prevent FOUC (Flash of Unstyled Content) -->
+  <style>
+    body { 
+      margin: 0; 
+      padding: 0; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+    
+    /* Loading spinner for initial load */
+    .initial-loader {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(255,255,255,0.3);
+      border-top: 4px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      z-index: 9999;
+    }
+    
+    @keyframes spin {
+      0% { transform: translate(-50%, -50%) rotate(0deg); }
+      100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+    
+    /* Hide loader when Angular loads */
+    app-root:not(:empty) + .initial-loader {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <app-root></app-root>
+  
+  <!-- Initial loading indicator -->
+  <div class="initial-loader" aria-label="Loading application"></div>
+  
+  <!-- Service Worker Registration -->
+  <script>
+    // Register service worker for PWA functionality
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then((registration) => {
+            console.log('SW registered: ', registration);
+          })
+          .catch((registrationError) => {
+            console.log('SW registration failed: ', registrationError);
+          });
+      });
+    }
+    
+    // Add to home screen prompt
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      // Show install button or banner
+      console.log('App can be installed');
+    });
+  </script>
+</body>
+</html>

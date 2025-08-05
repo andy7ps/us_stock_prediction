@@ -1,0 +1,117 @@
+{
+  "name": "US Stock Prediction Service",
+  "short_name": "Stock Predictor",
+  "description": "Enterprise-grade ML-powered stock price prediction service with real-time data and advanced analytics",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#667eea",
+  "theme_color": "#667eea",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en-US",
+  "categories": ["finance", "business", "productivity"],
+  "icons": [
+    {
+      "src": "/assets/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/assets/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/assets/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/assets/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/assets/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/assets/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/assets/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/assets/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "NVIDIA Prediction",
+      "short_name": "NVDA",
+      "description": "Get NVIDIA stock prediction",
+      "url": "/?symbol=NVDA",
+      "icons": [
+        {
+          "src": "/assets/shortcut-nvda.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Tesla Prediction",
+      "short_name": "TSLA",
+      "description": "Get Tesla stock prediction",
+      "url": "/?symbol=TSLA",
+      "icons": [
+        {
+          "src": "/assets/shortcut-tsla.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Apple Prediction",
+      "short_name": "AAPL",
+      "description": "Get Apple stock prediction",
+      "url": "/?symbol=AAPL",
+      "icons": [
+        {
+          "src": "/assets/shortcut-aapl.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/assets/screenshot-mobile.png",
+      "sizes": "375x812",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/assets/screenshot-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
+}

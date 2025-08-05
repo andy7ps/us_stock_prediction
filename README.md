@@ -1,18 +1,22 @@
-# 📈 US Stock Prediction Service v3.1.0
+# 📈 US Stock Prediction Service v3.2.0
 
 [![Go Version](https://img.shields.io/badge/Go-1.23+-blue.svg)](https://golang.org)
 [![Python Version](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org)
+[![Angular Version](https://img.shields.io/badge/Angular-20+-red.svg)](https://angular.io)
+[![Bootstrap Version](https://img.shields.io/badge/Bootstrap-5.3.3-purple.svg)](https://getbootstrap.com)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://docker.com)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Release](https://img.shields.io/badge/Release-v3.1.0-brightgreen.svg)](https://github.com/andy7ps/us_stock_prediction/releases/tag/v3.1.0)
+[![Release](https://img.shields.io/badge/Release-v3.2.0-brightgreen.svg)](https://github.com/andy7ps/us_stock_prediction/releases/tag/v3.2.0)
 [![Production Ready](https://img.shields.io/badge/Production-Ready-success.svg)](#production-deployment)
 
-> **Enterprise-grade stock price prediction service with persistent storage, real-time ML predictions, and comprehensive monitoring.**
+> **Full-stack enterprise-grade stock price prediction service with Bootstrap-enhanced Angular frontend, Go backend, persistent storage, real-time ML predictions, and comprehensive monitoring.**
 
 ## 🎯 **What This Service Does**
 
-The US Stock Prediction Service is a **production-ready, enterprise-grade application** that provides:
+The US Stock Prediction Service is a **production-ready, full-stack enterprise-grade application** that provides:
 
+- **🎨 Bootstrap-Enhanced UI**: Professional Angular frontend with Bootstrap 5.3.3
+- **📱 Mobile-First Design**: Responsive design optimized for all devices
 - **🤖 Real-time ML Predictions**: Advanced LSTM neural networks for stock price forecasting
 - **📊 Live Market Data**: Real-time stock data from Yahoo Finance API
 - **💾 Zero Data Loss**: Enterprise-grade persistent storage system
@@ -28,17 +32,76 @@ The US Stock Prediction Service is a **production-ready, enterprise-grade applic
 git clone https://github.com/andy7ps/us_stock_prediction.git
 cd us_stock_prediction
 
-# 2. One-command setup with persistent storage
-./setup_persistent_storage.sh
+# 2. One-command Bootstrap-enhanced setup
+./deploy_docker_bootstrap.sh
 
-# 3. Start all services
-docker-compose up -d
-
-# 4. Test the service
-curl http://localhost:8080/api/v1/predict/NVDA
+# 3. Access the application
+# Frontend: http://localhost:8080 (Bootstrap UI)
+# Backend API: http://localhost:8081
+# Grafana: http://localhost:3000 (admin/admin)
 ```
 
-**🎉 That's it! Your enterprise-grade stock prediction service is running!**
+**🎉 That's it! Your Bootstrap-enhanced stock prediction service is running!**
+
+## 🏗️ **Architecture**
+
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Web Browser   │───▶│  Angular Frontend│───▶│     Nginx       │
+│   (Port 8080)   │    │   (Port 8080)    │    │   (Proxy)       │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+                                                         │
+                       ┌─────────────────┐              │
+                       │   Prometheus    │◀─────────────┤
+                       │   (Port 9090)   │              │
+                       └─────────────────┘              │
+                                                         ▼
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Yahoo Finance │◀───│   Go Backend API │◀───│   API Gateway   │
+│      API        │    │   (Port 8081)    │    │   (Port 8081)   │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+                                                         │
+┌─────────────────┐    ┌──────────────────┐              │
+│   Python ML     │◀───│   ML Executor    │◀─────────────┤
+│    Models       │    └──────────────────┘              │
+└─────────────────┘                                      │
+                                                         ▼
+┌─────────────────┐                            ┌─────────────────┐
+│  Persistent     │◀───────────────────────────│  Services &     │
+│  Data Storage   │                            │  Cache Layer    │
+└─────────────────┘                            └─────────────────┘
+```
+
+## 🌐 **Frontend Features** *(Enhanced in v3.2)*
+
+### **Bootstrap 5.3.3 Professional UI** 🔥
+- **🎨 Modern Components**: Professional card-based layout with Bootstrap components
+- **📱 Mobile-First Design**: Responsive breakpoints for all screen sizes (xs, sm, md, lg, xl)
+- **🔍 Bootstrap Icons**: Complete icon library with 1,800+ scalable vector icons
+- **⚡ Enhanced Animations**: Smooth transitions, hover effects, and loading indicators
+- **♿ Accessibility**: WCAG 2.1 compliance with enhanced screen reader support
+- **🌙 Dark Mode**: Automatic dark mode support based on system preferences
+- **🎯 Touch-Friendly**: 48px+ touch targets optimized for mobile devices
+
+### **Advanced Angular Interface**
+- **📱 Responsive Design**: Works perfectly on desktop, tablet, and mobile
+- **🎨 Beautiful UI**: Bootstrap gradient design with glass effects and shadows
+- **⚡ Real-time Updates**: Live stock predictions and market data
+- **📊 Data Visualization**: Interactive charts and confidence indicators
+- **🔄 Auto-refresh**: Automatic data updates and health monitoring
+
+### **User Experience**
+- **🎯 One-click Predictions**: Popular stock symbols with quick selection
+- **📈 Historical Data**: View historical stock data with responsive tables
+- **💡 Smart Recommendations**: Buy/Sell/Hold recommendations with confidence scores
+- **🚨 Error Handling**: Graceful error handling with Bootstrap alerts
+- **📱 Mobile Optimized**: Touch-friendly interface for mobile devices
+
+### **Mobile App Integration Ready**
+- **🔗 WebView Compatible**: Optimized for embedding in native mobile apps
+- **📱 PWA Installation**: Add to home screen for native app-like experience
+- **🔄 Offline Support**: Service worker for offline functionality
+- **📊 Performance Optimized**: Fast loading, smooth animations, minimal data usage
 
 ## 📋 **Table of Contents**
 

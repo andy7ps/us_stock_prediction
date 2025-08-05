@@ -1,0 +1,302 @@
+<!-- Bootstrap-Enhanced Stock Prediction Interface -->
+<div class="container-fluid py-4">
+  <!-- Header Section -->
+  <header class="text-center mb-5 fade-in">
+    <h1 class="display-4 fw-bold text-gradient mb-3">
+      📈 US Stock Prediction Service
+    </h1>
+    <p class="lead text-white-50">
+      Enterprise-grade ML-powered stock price forecasting
+    </p>
+  </header>
+
+  <!-- Service Status Card -->
+  <div class="row justify-content-center mb-4">
+    <div class="col-lg-8">
+      <div class="card glass-effect slide-up" 
+           [ngClass]="{'border-success': isServiceOnline, 'border-danger': !isServiceOnline}"
+           role="status" 
+           [attr.aria-label]="'Service status: ' + (isServiceOnline ? 'Online' : 'Offline')">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between flex-wrap">
+            <div class="d-flex align-items-center mb-2 mb-md-0">
+              <span class="status-dot me-2" 
+                    [ngClass]="{'online': isServiceOnline, 'offline': !isServiceOnline}"
+                    [attr.aria-hidden]="true"></span>
+              <h5 class="mb-0" [ngClass]="{'status-online': isServiceOnline, 'status-offline': !isServiceOnline}">
+                {{ isServiceOnline ? 'Service Online' : 'Service Offline' }}
+              </h5>
+            </div>
+            <div class="d-flex flex-wrap gap-3" *ngIf="serviceStats" role="complementary">
+              <small class="text-muted">
+                <i class="bi bi-clock"></i> Uptime: {{ serviceStats.uptime }}
+              </small>
+              <small class="text-muted">
+                <i class="bi bi-speedometer2"></i> Cache: {{ serviceStats.cache_hit_rate }}%
+              </small>
+              <small class="text-muted">
+                <i class="bi bi-lightning"></i> Response: {{ serviceStats.average_response_time }}
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stock Input Section -->
+  <div class="row justify-content-center mb-4">
+    <div class="col-lg-8">
+      <div class="card slide-up">
+        <div class="card-body">
+          <h5 class="card-title mb-4">
+            <i class="bi bi-search"></i> Stock Symbol Lookup
+          </h5>
+          
+          <!-- Input Group -->
+          <div class="input-group mb-4">
+            <span class="input-group-text">
+              <i class="bi bi-graph-up"></i>
+            </span>
+            <input 
+              id="stockSymbol"
+              type="text" 
+              class="form-control form-control-lg"
+              [(ngModel)]="stockSymbol" 
+              placeholder="Enter stock symbol (e.g., NVDA, TSLA, AAPL)"
+              (keyup.enter)="getPrediction()"
+              [disabled]="isLoading"
+              autocomplete="off"
+              autocapitalize="characters"
+              spellcheck="false"
+              maxlength="10"
+              aria-describedby="stock-help">
+            <button 
+              class="btn btn-primary btn-lg px-4"
+              type="button"
+              (click)="getPrediction()" 
+              [disabled]="isLoading || !stockSymbol.trim()"
+              [attr.aria-label]="isLoading ? 'Predicting stock price' : 'Get stock prediction for ' + stockSymbol">
+              <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+              {{ isLoading ? 'Predicting...' : 'Get Prediction' }}
+            </button>
+          </div>
+          
+          <!-- Popular Stocks -->
+          <div class="mb-3" role="group" aria-label="Popular stock symbols">
+            <label class="form-label fw-semibold mb-2">Popular Stocks:</label>
+            <div class="d-flex flex-wrap gap-2">
+              <button 
+                *ngFor="let symbol of popularStocks; trackBy: trackBySymbol" 
+                type="button"
+                class="btn btn-outline-primary btn-sm"
+                [class.active]="stockSymbol === symbol"
+                (click)="selectStock(symbol)"
+                [disabled]="isLoading"
+                [attr.aria-label]="'Select ' + symbol + ' stock'"
+                [attr.aria-pressed]="stockSymbol === symbol">
+                {{ symbol }}
+              </button>
+            </div>
+          </div>
+          
+          <div id="stock-help" class="form-text">
+            Enter a valid US stock symbol to get ML-powered price predictions
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Indicator -->
+  <div *ngIf="isLoading" class="row justify-content-center mb-4">
+    <div class="col-lg-6">
+      <div class="card text-center">
+        <div class="card-body py-5">
+          <div class="spinner-border-custom mb-3" role="status" 
+               [attr.aria-label]="'Loading prediction for ' + stockSymbol.toUpperCase()"></div>
+          <h5 class="mb-0">Analyzing {{ stockSymbol.toUpperCase() }} with ML models...</h5>
+          <p class="text-muted mb-0">This may take a few seconds</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Alert -->
+  <div *ngIf="errorMessage" class="row justify-content-center mb-4">
+    <div class="col-lg-8">
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <strong>Error:</strong> {{ errorMessage }}
+        <button type="button" class="btn-close" (click)="clearError()" aria-label="Close"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prediction Results -->
+  <div *ngIf="prediction && !isLoading" class="row justify-content-center mb-4">
+    <div class="col-lg-10">
+      <div class="card fade-in">
+        <div class="card-header bg-primary text-white">
+          <div class="d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">
+              <i class="bi bi-graph-up-arrow me-2"></i>
+              {{ prediction.symbol }} Prediction
+            </h4>
+            <small class="opacity-75">
+              {{ formatTimestamp(prediction.timestamp) }}
+            </small>
+          </div>
+        </div>
+        
+        <div class="card-body">
+          <!-- Price Information Row -->
+          <div class="row g-4 mb-4">
+            <div class="col-md-4">
+              <div class="text-center p-3 bg-light rounded">
+                <h6 class="text-muted mb-1">Current Price</h6>
+                <h3 class="mb-0 text-primary">${{ prediction.current_price.toFixed(2) }}</h3>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="text-center p-3 bg-light rounded">
+                <h6 class="text-muted mb-1">Predicted Price</h6>
+                <h3 class="mb-0 text-info">${{ prediction.predicted_price.toFixed(2) }}</h3>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="text-center p-3 bg-light rounded">
+                <h6 class="text-muted mb-1">Change</h6>
+                <h3 class="mb-0" [ngClass]="getPriceChangeClass(prediction.prediction_change)">
+                  {{ prediction.prediction_change > 0 ? '+' : '' }}${{ prediction.prediction_change.toFixed(2) }}
+                  <small class="d-block fs-6">
+                    ({{ prediction.prediction_change_percent.toFixed(2) }}%)
+                  </small>
+                </h3>
+              </div>
+            </div>
+          </div>
+
+          <!-- Metrics Row -->
+          <div class="row g-4 mb-4">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Confidence Level</label>
+              <div class="progress mb-2" style="height: 25px;">
+                <div class="progress-bar" 
+                     role="progressbar" 
+                     [style.width.%]="prediction.confidence * 100"
+                     [attr.aria-valuenow]="prediction.confidence * 100"
+                     [attr.aria-valuemin]="0"
+                     [attr.aria-valuemax]="100">
+                  {{ (prediction.confidence * 100).toFixed(1) }}%
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Recommendation</label>
+              <div>
+                <span class="badge fs-6 px-3 py-2" [ngClass]="getRecommendationClass(prediction.recommendation)">
+                  {{ prediction.recommendation.toUpperCase() }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Metadata -->
+          <div class="row g-3">
+            <div class="col-md-6">
+              <small class="text-muted">
+                <i class="bi bi-database me-1"></i>
+                Data Source: {{ prediction.data_source }}
+              </small>
+            </div>
+            <div class="col-md-6">
+              <small class="text-muted">
+                <i class="bi bi-cpu me-1"></i>
+                Model Version: {{ prediction.model_version }}
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Historical Data Section -->
+  <div *ngIf="prediction && !isLoading" class="row justify-content-center mb-4">
+    <div class="col-lg-10">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title mb-0">
+              <i class="bi bi-clock-history me-2"></i>
+              Historical Data
+            </h5>
+            <button 
+              class="btn btn-outline-secondary"
+              type="button"
+              (click)="toggleHistoricalData()" 
+              [disabled]="isLoadingHistorical"
+              [attr.aria-expanded]="showHistorical">
+              <span *ngIf="isLoadingHistorical" class="spinner-border spinner-border-sm me-2"></span>
+              {{ showHistorical ? 'Hide' : 'Show' }} Historical Data
+            </button>
+          </div>
+
+          <div *ngIf="showHistorical && historicalData" class="collapse show">
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead class="table-dark">
+                  <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col">Open</th>
+                    <th scope="col">High</th>
+                    <th scope="col">Low</th>
+                    <th scope="col">Close</th>
+                    <th scope="col">Volume</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let item of historicalData.data.slice(0, 10); trackBy: trackByDate">
+                    <td>{{ formatDate(item.date) }}</td>
+                    <td>${{ item.open.toFixed(2) }}</td>
+                    <td class="text-success">${{ item.high.toFixed(2) }}</td>
+                    <td class="text-danger">${{ item.low.toFixed(2) }}</td>
+                    <td class="fw-semibold">${{ item.close.toFixed(2) }}</td>
+                    <td class="text-muted">{{ formatVolume(item.volume) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div *ngIf="!isLoading" class="row justify-content-center">
+    <div class="col-lg-6">
+      <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+        <button 
+          class="btn btn-outline-warning"
+          type="button"
+          (click)="clearCache()" 
+          [disabled]="isClearingCache">
+          <span *ngIf="isClearingCache" class="spinner-border spinner-border-sm me-2"></span>
+          <i class="bi bi-trash me-1"></i>
+          {{ isClearingCache ? 'Clearing...' : 'Clear Cache' }}
+        </button>
+        <button 
+          class="btn btn-outline-info"
+          type="button"
+          (click)="refreshStats()" 
+          [disabled]="isRefreshingStats">
+          <span *ngIf="isRefreshingStats" class="spinner-border spinner-border-sm me-2"></span>
+          <i class="bi bi-arrow-clockwise me-1"></i>
+          {{ isRefreshingStats ? 'Refreshing...' : 'Refresh Stats' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
