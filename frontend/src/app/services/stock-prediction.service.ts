@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, retry } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 export interface PredictionResponse {
   symbol: string;
@@ -50,10 +51,12 @@ export interface HealthStatus {
   providedIn: 'root'
 })
 export class StockPredictionService {
-  // Use relative URL for Docker networking, nginx will proxy to backend
-  private readonly baseUrl = '/api/v1';
+  // Use environment-specific API URL
+  private readonly baseUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) {
+    console.log('StockPredictionService initialized with baseUrl:', this.baseUrl);
+  }
 
   /**
    * Get stock price prediction for a symbol

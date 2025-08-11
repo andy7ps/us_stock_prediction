@@ -20,7 +20,7 @@ RUN npm config set fetch-retry-mintimeout 10000
 RUN npm config set fetch-retry-maxtimeout 60000
 
 # Install dependencies with exact versions
-RUN npm ci --only=production --no-audit --no-fund
+RUN npm ci --no-audit --no-fund
 
 # Copy source code
 COPY . .
@@ -36,14 +36,7 @@ ENV BOOTSTRAP_VERSION=$BOOTSTRAP_VERSION
 ENV NG_CLI_ANALYTICS=false
 
 # Build the Angular application with Bootstrap
-RUN npm run build -- --configuration=production \
-    --optimization=$BUILD_OPTIMIZATION \
-    --aot=true \
-    --build-optimizer=true \
-    --common-chunk=true \
-    --vendor-chunk=true \
-    --source-map=false \
-    --stats-json=false
+RUN npx ng build --configuration=production
 
 # Verify Bootstrap integration
 RUN ls -la dist/frontend/
@@ -56,9 +49,7 @@ FROM nginx:1.25-alpine
 # Install additional tools for health checks
 RUN apk add --no-cache curl wget
 
-# Create nginx user and directories
-RUN addgroup -g 101 -S nginx && \
-    adduser -S -D -H -u 101 -h /var/cache/nginx -s /sbin/nologin -G nginx -g nginx nginx
+# Nginx user already exists in nginx:1.25-alpine, just ensure proper setup
 
 # Copy built application from build stage
 COPY --from=build /app/dist/frontend /usr/share/nginx/html
@@ -66,8 +57,8 @@ COPY --from=build /app/dist/frontend /usr/share/nginx/html
 # Copy custom nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
 
-# Copy additional configuration files
-COPY --from=build /app/src/assets /usr/share/nginx/html/assets
+# Copy additional configuration files (optional)
+RUN mkdir -p /usr/share/nginx/html/assets
 
 # Create necessary directories and set permissions
 RUN mkdir -p /var/cache/nginx /var/log/nginx /var/run && \

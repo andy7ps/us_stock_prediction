@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # Go Backend API
+  stock-prediction:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      - SERVER_PORT=8081
+      - LOG_LEVEL=info
+      - STOCK_SYMBOL=NVDA
+      - ML_MODEL_PATH=/app/persistent_data/ml_models/nvda_lstm_model
+      - STOCK_DATA_CACHE_PATH=/app/persistent_data/stock_data/cache
+    volumes:
+      - ./persistent_data:/app/persistent_data
+      - ./scripts:/app/scripts:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8081/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - stock-prediction-network
+
+  # Prometheus
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./persistent_data/prometheus:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+    restart: unless-stopped
+    networks:
+      - stock-prediction-network
+
+  # Grafana
+  grafana:
+    image: grafana/grafana:10.1.0
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_USER=admin
+    volumes:
+      - ./persistent_data/grafana:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    networks:
+      - stock-prediction-network
+    user: "472:472"
+
+networks:
+  stock-prediction-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16

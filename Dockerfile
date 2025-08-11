@@ -58,7 +58,7 @@ RUN mkdir -p /app/models /app/logs /app/config && \
     chown -R appuser:appgroup /app/models /app/logs /app/config
 
 # Copy default models and config if they exist (will be overridden by volumes)
-COPY --chown=appuser:appgroup models/ ./models/ 2>/dev/null || true
+COPY --chown=appuser:appgroup models/ ./models/
 
 # Create data initialization script
 RUN echo '#!/bin/bash\n\

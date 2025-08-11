@@ -1,49 +1,6 @@
 version: '3.8'
 
 services:
-  # Bootstrap-Enhanced Angular Frontend
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        - NODE_ENV=production
-        - BOOTSTRAP_VERSION=5.3.3
-        - BUILD_OPTIMIZATION=true
-    ports:
-      - "8080:80"
-    environment:
-      - NGINX_HOST=localhost
-      - NGINX_PORT=80
-      - API_BASE_URL=http://stock-prediction:8081
-      - BOOTSTRAP_THEME=enabled
-      - BOOTSTRAP_ICONS_VERSION=1.13.1
-      - ANGULAR_VERSION=20.1.0
-    volumes:
-      # Nginx configuration is already copied in Dockerfile
-      # Static assets for better performance
-      - ./frontend/public:/usr/share/nginx/html/assets:ro
-      # Persistent logs
-      - ./persistent_data/frontend/logs:/var/log/nginx
-    depends_on:
-      stock-prediction:
-        condition: service_healthy
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    networks:
-      - stock-prediction-network
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`localhost`)"
-      - "traefik.http.services.frontend.loadbalancer.server.port=80"
-      - "com.docker.compose.service=frontend"
-      - "com.docker.compose.version=3.2.0"
-
   # Go Backend API with Enhanced Configuration
   stock-prediction:
     build: 
@@ -114,7 +71,7 @@ services:
       - "traefik.http.routers.api.rule=Host(`localhost`) && PathPrefix(`/api`)"
       - "traefik.http.services.api.loadbalancer.server.port=8081"
 
-  # Prometheus with Enhanced Configuration
+  # Prometheus with Enhanced Configuration and Fixed Permissions
   prometheus:
     image: prom/prometheus:v2.47.0
     ports:
@@ -125,7 +82,7 @@ services:
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./monitoring/rules:/etc/prometheus/rules:ro
-      # Persistent Prometheus data
+      # Persistent Prometheus data with correct permissions
       - ./persistent_data/prometheus:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -144,8 +101,10 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    # Run as nobody user (65534:65534)
+    user: "65534:65534"
 
-  # Grafana with Bootstrap Dashboard Support
+  # Grafana with Bootstrap Dashboard Support and Fixed Permissions
   grafana:
     image: grafana/grafana:10.1.0
     ports:
@@ -176,7 +135,7 @@ services:
       - GF_FEATURE_TOGGLES_ENABLE=publicDashboards
       - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/provisioning/dashboards/bootstrap-dashboard.json
     volumes:
-      # Persistent Grafana data
+      # Persistent Grafana data with correct permissions
       - ./persistent_data/grafana:/var/lib/grafana
       - ./persistent_data/grafana/logs:/var/log/grafana
       
@@ -189,7 +148,8 @@ services:
       - prometheus
     networks:
       - stock-prediction-network
-    user: "472:472"  # Grafana user ID for proper permissions
+    # Run as grafana user (472:472)
+    user: "472:472"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
       interval: 30s
