@@ -87,7 +87,7 @@ func (s *Service) PredictStock(ctx context.Context, req *models.PredictionReques
 		TradingSignal:  string(signal),
 		Confidence:     confidence,
 		PredictionTime: time.Now(),
-		ModelVersion:   "v3.1.0", // This could be dynamic based on actual model version
+		ModelVersion:   "v3.3.0", // This could be dynamic based on actual model version
 	}
 	
 	// Cache the result
@@ -206,7 +206,7 @@ func (s *Service) GetModelInfo() map[string]interface{} {
 		"model_path":    s.config.ML.ModelPath,
 		"scaler_path":   s.config.ML.ScalerPath,
 		"python_script": s.config.ML.PythonScript,
-		"version":       "v3.1.0",
+		"version":       "v3.3.0",
 	}
 	
 	// Check if files exist
