@@ -1,59 +1,21 @@
 version: '3.8'
 
 services:
-  # Go Backend API with Enhanced Configuration
+  # Go Backend API
   stock-prediction:
     build: 
       context: .
       dockerfile: Dockerfile
-      args:
-        - GO_VERSION=1.23
     ports:
       - "8081:8081"
     environment:
-      # Server Configuration
       - SERVER_PORT=8081
-      - SERVER_READ_TIMEOUT=10s
-      - SERVER_WRITE_TIMEOUT=10s
       - LOG_LEVEL=info
-      - LOG_FORMAT=json
-      
-      # Stock Configuration
       - STOCK_SYMBOL=NVDA
-      - STOCK_LOOKBACK_DAYS=5
-      - STOCK_BUY_THRESHOLD=1.01
-      - STOCK_SELL_THRESHOLD=0.99
-      
-      # API Configuration
-      - API_TIMEOUT=30s
-      - ML_PREDICTION_TTL=5m
-      - CORS_ORIGINS=http://localhost:8080,http://frontend:80
-      
-      # Frontend Integration
-      - FRONTEND_URL=http://localhost:8080
-      - BOOTSTRAP_MODE=enabled
-      - UI_THEME=bootstrap
-      
-      # Persistent Data Paths
       - ML_MODEL_PATH=/app/persistent_data/ml_models/nvda_lstm_model
-      - ML_SCALER_PATH=/app/persistent_data/scalers/scaler.pkl
       - STOCK_DATA_CACHE_PATH=/app/persistent_data/stock_data/cache
-      - PREDICTION_CACHE_PATH=/app/persistent_data/stock_data/predictions
-      - LOG_PATH=/app/persistent_data/logs
-      
-      # Performance Configuration
-      - CACHE_TTL=300s
-      - MAX_CONCURRENT_REQUESTS=100
-      - RATE_LIMIT=1000
     volumes:
-      # Persistent data volumes with enhanced organization
       - ./persistent_data:/app/persistent_data
-      - ./persistent_data/ml_models:/app/models
-      - ./persistent_data/scalers:/app/scalers
-      - ./persistent_data/logs:/app/logs
-      - ./persistent_data/config:/app/config
-      - ./persistent_data/cache:/app/cache
-      # Read-only script mount
       - ./scripts:/app/scripts:ro
     restart: unless-stopped
     healthcheck:
@@ -62,153 +24,44 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    depends_on:
-      - prometheus
     networks:
       - stock-prediction-network
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.api.rule=Host(`localhost`) && PathPrefix(`/api`)"
-      - "traefik.http.services.api.loadbalancer.server.port=8081"
 
-  # Prometheus with Enhanced Configuration and Fixed Permissions
-  prometheus:
-    image: prom/prometheus:v2.47.0
+  # Angular Frontend with Nginx
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     ports:
-      - "9090:9090"
+      - "8080:80"
     environment:
-      - PROMETHEUS_RETENTION_TIME=30d
-      - PROMETHEUS_STORAGE_PATH=/prometheus
-    volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - ./monitoring/rules:/etc/prometheus/rules:ro
-      # Persistent Prometheus data with correct permissions
-      - ./persistent_data/prometheus:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-      - '--storage.tsdb.retention.time=30d'
-      - '--web.enable-lifecycle'
-      - '--web.enable-admin-api'
-      - '--storage.tsdb.wal-compression'
+      - API_BASE_URL=http://stock-prediction:8081
+    depends_on:
+      - stock-prediction
     restart: unless-stopped
     networks:
       - stock-prediction-network
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    # Run as nobody user (65534:65534)
-    user: "65534:65534"
 
-  # Grafana with Bootstrap Dashboard Support and Fixed Permissions
-  grafana:
-    image: grafana/grafana:10.1.0
-    ports:
-      - "3000:3000"
-    environment:
-      # Authentication
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_SECURITY_ADMIN_USER=admin
-      
-      # Paths
-      - GF_PATHS_DATA=/var/lib/grafana
-      - GF_PATHS_LOGS=/var/log/grafana
-      - GF_PATHS_PLUGINS=/var/lib/grafana/plugins
-      
-      # Server Configuration
-      - GF_SERVER_ROOT_URL=http://localhost:3000
-      - GF_SERVER_SERVE_FROM_SUB_PATH=false
-      
-      # Database
-      - GF_DATABASE_TYPE=sqlite3
-      - GF_DATABASE_PATH=/var/lib/grafana/grafana.db
-      
-      # Analytics
-      - GF_ANALYTICS_REPORTING_ENABLED=false
-      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
-      
-      # Bootstrap Theme Support
-      - GF_FEATURE_TOGGLES_ENABLE=publicDashboards
-      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/provisioning/dashboards/bootstrap-dashboard.json
-    volumes:
-      # Persistent Grafana data with correct permissions
-      - ./persistent_data/grafana:/var/lib/grafana
-      - ./persistent_data/grafana/logs:/var/log/grafana
-      
-      # Configuration (read-only)
-      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
-      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
-      - ./monitoring/grafana/plugins:/var/lib/grafana/plugins:ro
-    restart: unless-stopped
-    depends_on:
-      - prometheus
-    networks:
-      - stock-prediction-network
-    # Run as grafana user (472:472)
-    user: "472:472"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-
-  # Redis for Enhanced Caching (Optional)
+  # Redis Cache
   redis:
     image: redis:7.2-alpine
     ports:
       - "6379:6379"
-    environment:
-      - REDIS_PASSWORD=stockprediction2025
     volumes:
-      - ./persistent_data/redis:/data
-    command: redis-server --appendonly yes --requirepass stockprediction2025
+      - redis_data:/data
     restart: unless-stopped
-    networks:
-      - stock-prediction-network
     healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - stock-prediction-network
 
 networks:
   stock-prediction-network:
     driver: bridge
-    ipam:
-      config:
-        - subnet: 172.25.0.0/16
 
 volumes:
-  # Named volumes for better management
-  persistent_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./persistent_data
-  
-  prometheus_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./persistent_data/prometheus
-      
-  grafana_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./persistent_data/grafana
-      
   redis_data:
     driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./persistent_data/redis

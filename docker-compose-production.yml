@@ -1,35 +1,24 @@
 version: '3.8'
 
 services:
-  # Bootstrap-Enhanced Angular Frontend with Nginx
+  # Angular Frontend with Bootstrap 5.3.3
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        - NODE_ENV=production
-        - BOOTSTRAP_VERSION=5.3.3
-        - BUILD_OPTIMIZATION=true
+      dockerfile: Dockerfile.production
     ports:
-      - "8080:80"
+      - "8080:8080"
     environment:
-      - NGINX_HOST=0.0.0.0
-      - NGINX_PORT=80
+      - NODE_ENV=production
       - API_BASE_URL=http://stock-prediction:8081
-      - BOOTSTRAP_THEME=enabled
-      - BOOTSTRAP_ICONS_VERSION=1.13.1
+      - BOOTSTRAP_VERSION=5.3.3
       - ANGULAR_VERSION=20.1.0
-    volumes:
-      # Persistent logs
-      - ./persistent_data/frontend/logs:/var/log/nginx
-      # Static assets (optional)
-      - ./frontend/public:/usr/share/nginx/html/public:ro
     depends_on:
       stock-prediction:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -38,7 +27,6 @@ services:
       - stock-prediction-network
     labels:
       - "com.docker.compose.service=frontend"
-      - "com.docker.compose.version=3.2.0"
       - "description=Bootstrap-Enhanced Angular Frontend"
 
   # Go Backend API with ML Prediction Service
@@ -46,8 +34,6 @@ services:
     build: 
       context: .
       dockerfile: Dockerfile
-      args:
-        - GO_VERSION=1.23
     ports:
       - "8081:8081"
     environment:
@@ -56,7 +42,6 @@ services:
       - SERVER_READ_TIMEOUT=30s
       - SERVER_WRITE_TIMEOUT=30s
       - LOG_LEVEL=info
-      - LOG_FORMAT=json
       
       # Stock Configuration
       - STOCK_SYMBOL=NVDA
@@ -64,36 +49,31 @@ services:
       - STOCK_BUY_THRESHOLD=1.01
       - STOCK_SELL_THRESHOLD=0.99
       
-      # API Configuration
-      - API_TIMEOUT=30s
+      # ML Configuration
+      - ML_PYTHON_SCRIPT=scripts/ml/predict.py
+      - ML_MODEL_PATH=/app/persistent_data/ml_models/nvda_lstm_model
       - ML_PREDICTION_TTL=5m
+      - STOCK_DATA_CACHE_PATH=/app/persistent_data/stock_data/cache
+      
+      # Cache Configuration
+      - REDIS_URL=redis://redis:6379
+      - CACHE_TTL=300
+      - CACHE_MAX_SIZE=1000
+      
+      # CORS Configuration
       - CORS_ORIGINS=*
       
       # Frontend Integration
-      - FRONTEND_URL=http://frontend:80
+      - FRONTEND_URL=http://frontend:8080
       - BOOTSTRAP_MODE=enabled
       - UI_THEME=bootstrap
-      
-      # Persistent Data Paths
-      - ML_MODEL_PATH=/app/persistent_data/ml_models/nvda_lstm_model
-      - ML_SCALER_PATH=/app/persistent_data/scalers/scaler.pkl
-      - STOCK_DATA_CACHE_PATH=/app/persistent_data/stock_data/cache
-      - PREDICTION_CACHE_PATH=/app/persistent_data/stock_data/predictions
-      - LOG_PATH=/app/persistent_data/logs
-      
-      # Performance Configuration
-      - CACHE_TTL=300s
-      - MAX_CONCURRENT_REQUESTS=100
-      - RATE_LIMIT=1000
-      
-      # Redis Configuration
-      - REDIS_URL=redis://redis:6379
-      - REDIS_PASSWORD=stockprediction2025
     volumes:
-      # Persistent data volumes
-      - ./persistent_data:/app/persistent_data
-      # Read-only script mount
+      - persistent_data:/app/persistent_data
       - ./scripts:/app/scripts:ro
+      - ./models:/app/models:ro
+    depends_on:
+      redis:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8081/api/v1/health"]
@@ -101,151 +81,99 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
-    depends_on:
-      redis:
-        condition: service_healthy
-      prometheus:
-        condition: service_healthy
     networks:
       - stock-prediction-network
     labels:
       - "com.docker.compose.service=backend"
-      - "description=Go Backend API with ML Predictions"
+      - "description=Go Backend with ML Prediction Engine"
 
   # Redis Cache for High Performance
   redis:
     image: redis:7.2-alpine
     ports:
       - "6379:6379"
-    environment:
-      - REDIS_PASSWORD=stockprediction2025
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
     volumes:
-      - ./persistent_data/redis:/data
-    command: >
-      redis-server 
-      --appendonly yes 
-      --requirepass stockprediction2025
-      --maxmemory 256mb
-      --maxmemory-policy allkeys-lru
-      --save 900 1
-      --save 300 10
-      --save 60 10000
+      - redis_data:/data
     restart: unless-stopped
-    networks:
-      - stock-prediction-network
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "stockprediction2025", "ping"]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 30s
+    networks:
+      - stock-prediction-network
     labels:
       - "com.docker.compose.service=cache"
-      - "description=Redis Cache for Performance"
+      - "description=Redis Cache for ML Predictions"
 
-  # Prometheus Metrics Collection
+  # Prometheus Monitoring
   prometheus:
     image: prom/prometheus:v2.47.0
     ports:
       - "9090:9090"
-    environment:
-      - PROMETHEUS_RETENTION_TIME=30d
-      - PROMETHEUS_STORAGE_PATH=/prometheus
-    volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - ./monitoring/rules:/etc/prometheus/rules:ro
-      - ./persistent_data/prometheus:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
       - '--web.console.libraries=/etc/prometheus/console_libraries'
       - '--web.console.templates=/etc/prometheus/consoles'
-      - '--storage.tsdb.retention.time=30d'
       - '--web.enable-lifecycle'
       - '--web.enable-admin-api'
-      - '--storage.tsdb.wal-compression'
-      - '--web.external-url=http://localhost:9090'
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/rules:/etc/prometheus/rules:ro
+      - prometheus_data:/prometheus
+    depends_on:
+      - stock-prediction
     restart: unless-stopped
-    networks:
-      - stock-prediction-network
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 30s
-    # Run as nobody user for security
-    user: "65534:65534"
+    networks:
+      - stock-prediction-network
     labels:
       - "com.docker.compose.service=monitoring"
       - "description=Prometheus Metrics Collection"
 
-  # Grafana Dashboard and Visualization
+  # Grafana Dashboards
   grafana:
     image: grafana/grafana:10.1.0
     ports:
       - "3000:3000"
     environment:
-      # Authentication
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ALLOW_SIGN_UP=false
-      
-      # Paths
-      - GF_PATHS_DATA=/var/lib/grafana
-      - GF_PATHS_LOGS=/var/log/grafana
-      - GF_PATHS_PLUGINS=/var/lib/grafana/plugins
-      
-      # Server Configuration
-      - GF_SERVER_ROOT_URL=http://localhost:3000
-      - GF_SERVER_SERVE_FROM_SUB_PATH=false
-      - GF_SERVER_DOMAIN=localhost
-      - GF_SERVER_HTTP_PORT=3000
-      
-      # Database
-      - GF_DATABASE_TYPE=sqlite3
-      - GF_DATABASE_PATH=/var/lib/grafana/grafana.db
-      
-      # Analytics and Updates
-      - GF_ANALYTICS_REPORTING_ENABLED=false
-      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
       - GF_USERS_ALLOW_SIGN_UP=false
-      
-      # Bootstrap Theme Support
-      - GF_FEATURE_TOGGLES_ENABLE=publicDashboards
-      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/provisioning/dashboards/stock-prediction-dashboard.json
-      
-      # Performance
-      - GF_RENDERING_SERVER_URL=http://localhost:8081
-      - GF_RENDERING_CALLBACK_URL=http://grafana:3000
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+      - GF_RENDERING_SERVER_URL=http://renderer:8081/render
+      - GF_RENDERING_CALLBACK_URL=http://grafana:3000/
+      - GF_LOG_FILTERS=rendering:debug
     volumes:
-      # Persistent Grafana data
-      - ./persistent_data/grafana:/var/lib/grafana
-      - ./persistent_data/grafana/logs:/var/log/grafana
-      
-      # Configuration (read-only)
+      - grafana_data:/var/lib/grafana
       - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
       - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
-    restart: unless-stopped
     depends_on:
       prometheus:
         condition: service_healthy
-    networks:
-      - stock-prediction-network
-    # Run as grafana user for security
-    user: "472:472"
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 60s
+      start_period: 40s
+    networks:
+      - stock-prediction-network
+    user: "472:472"
     labels:
       - "com.docker.compose.service=visualization"
-      - "description=Grafana Dashboard and Visualization"
+      - "description=Grafana Monitoring Dashboards"
 
   # Nginx Reverse Proxy (Optional - for production load balancing)
-  nginx-proxy:
+  nginx:
     image: nginx:1.25-alpine
     ports:
       - "80:80"
@@ -253,38 +181,32 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
-      - ./persistent_data/nginx/logs:/var/log/nginx
+      - nginx_logs:/var/log/nginx
     depends_on:
       - frontend
       - stock-prediction
     restart: unless-stopped
-    networks:
-      - stock-prediction-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
       interval: 30s
       timeout: 10s
       retries: 3
+    networks:
+      - stock-prediction-network
     labels:
       - "com.docker.compose.service=proxy"
       - "description=Nginx Reverse Proxy"
-    profiles:
-      - production
 
+# Networks
 networks:
   stock-prediction-network:
     driver: bridge
     ipam:
-      driver: default
       config:
         - subnet: 172.25.0.0/16
-          gateway: 172.25.0.1
-    labels:
-      - "com.docker.compose.network=stock-prediction"
-      - "description=Stock Prediction Service Network"
 
+# Persistent Volumes
 volumes:
-  # Persistent data volumes
   persistent_data:
     driver: local
     driver_opts:
@@ -293,7 +215,7 @@ volumes:
       device: ./persistent_data
     labels:
       - "com.docker.compose.volume=persistent-data"
-  
+
   prometheus_data:
     driver: local
     driver_opts:
@@ -302,7 +224,7 @@ volumes:
       device: ./persistent_data/prometheus
     labels:
       - "com.docker.compose.volume=prometheus-data"
-      
+
   grafana_data:
     driver: local
     driver_opts:
@@ -311,7 +233,7 @@ volumes:
       device: ./persistent_data/grafana
     labels:
       - "com.docker.compose.volume=grafana-data"
-      
+
   redis_data:
     driver: local
     driver_opts:
@@ -321,11 +243,11 @@ volumes:
     labels:
       - "com.docker.compose.volume=redis-data"
 
-  frontend_logs:
+  nginx_logs:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: ./persistent_data/frontend/logs
+      device: ./persistent_data/nginx/logs
     labels:
-      - "com.docker.compose.volume=frontend-logs"
+      - "com.docker.compose.volume=nginx-logs"

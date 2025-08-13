@@ -3,17 +3,30 @@ global:
   evaluation_interval: 15s
 
 rule_files:
-  # - "first_rules.yml"
-  # - "second_rules.yml"
+  - "/etc/prometheus/rules/*.yml"
 
 scrape_configs:
+  - job_name: 'stock-prediction-api'
+    static_configs:
+      - targets: ['stock-prediction:8081']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
 
-  - job_name: 'stock-prediction'
+  - job_name: 'redis'
     static_configs:
-      - targets: ['stock-prediction:8080']
-    metrics_path: '/metrics'
-    scrape_interval: 10s
-    scrape_timeout: 5s
+      - targets: ['redis:6379']
+
+  - job_name: 'frontend'
+    static_configs:
+      - targets: ['frontend:8080']
+    metrics_path: '/health'
+    scrape_interval: 60s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
