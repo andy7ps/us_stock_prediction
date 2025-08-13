@@ -1,16 +1,34 @@
 #!/bin/bash
 
-# Enhanced Automatic Training Script
+# Enhanced Automatic Training Script - Persistent Data Edition
 # Implements automatic retraining with performance monitoring and scheduling
+# ALL operations use persistent_data/ directory structure
 
 set -e
 
+# PERSISTENT DATA PATHS - MANDATORY
+PERSISTENT_DATA_DIR="./persistent_data"
+MODEL_DIR="$PERSISTENT_DATA_DIR/ml_models"
+SCALERS_DIR="$PERSISTENT_DATA_DIR/scalers"
+ML_CACHE_DIR="$PERSISTENT_DATA_DIR/ml_cache"
+STOCK_DATA_DIR="$PERSISTENT_DATA_DIR/stock_data"
+LOG_DIR="$PERSISTENT_DATA_DIR/logs/training"
+CONFIG_DIR="$PERSISTENT_DATA_DIR/config"
+BACKUPS_DIR="$PERSISTENT_DATA_DIR/backups"
+
+# Ensure persistent data structure exists
+if [ ! -d "$PERSISTENT_DATA_DIR" ]; then
+    echo "🚨 ERROR: persistent_data directory not found!"
+    echo "Run: ./setup_persistent_data.sh"
+    exit 1
+fi
+
+# Create required directories
+mkdir -p "$LOG_DIR" "$CONFIG_DIR" "$BACKUPS_DIR"
+
 # Configuration
 SYMBOLS="NVDA TSLA AAPL MSFT GOOGL AMZN AUR PLTR SMCI TSM MP SMR SPY"
-MODEL_DIR="persistent_data/ml_models"
-LOG_DIR="logs/training"
-EVALUATION_DIR="evaluation_results"
-CONFIG_FILE="persistent_data/training_config.json"
+CONFIG_FILE="$CONFIG_DIR/training_config.json"
 
 # Performance thresholds
 MIN_ACCURACY=45.0
@@ -23,11 +41,241 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
 NC='\033[0m' # No Color
 
 # Logging functions
 log_info() {
     echo -e "${BLUE}[INFO]${NC} $(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a "$LOG_DIR/training.log"
+}
+
+log_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a "$LOG_DIR/training.log"
+}
+
+log_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a "$LOG_DIR/training.log"
+}
+
+log_error() {
+    echo -e "${RED}[ERROR]${NC} $(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a "$LOG_DIR/training.log"
+}
+
+log_critical() {
+    echo -e "${PURPLE}[CRITICAL]${NC} $(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a "$LOG_DIR/training.log"
+}
+
+# Initialize training configuration
+init_config() {
+    if [ ! -f "$CONFIG_FILE" ]; then
+        log_info "Creating training configuration file"
+        cat > "$CONFIG_FILE" << EOF
+{
+  "last_training": "$(date -Iseconds)",
+  "training_mode": "automatic",
+  "persistent_data_dir": "$PERSISTENT_DATA_DIR",
+  "model_dir": "$MODEL_DIR",
+  "scalers_dir": "$SCALERS_DIR",
+  "cache_dir": "$ML_CACHE_DIR",
+  "log_dir": "$LOG_DIR",
+  "thresholds": {
+    "min_accuracy": $MIN_ACCURACY,
+    "max_mape": $MAX_MAPE,
+    "min_confidence": $MIN_CONFIDENCE,
+    "max_model_age_days": $MAX_MODEL_AGE_DAYS
+  },
+  "symbols": "$SYMBOLS"
+}
+EOF
+    fi
+}
+
+# Check if model needs retraining
+needs_retraining() {
+    local symbol=$1
+    local model_file="$MODEL_DIR/${symbol,,}_lstm_model.h5"
+    
+    # Check if model exists
+    if [ ! -f "$model_file" ]; then
+        log_warning "Model not found for $symbol: $model_file"
+        return 0  # Needs training
+    fi
+    
+    # Check model age
+    local model_age_days=$(( ($(date +%s) - $(stat -c %Y "$model_file")) / 86400 ))
+    if [ $model_age_days -gt $MAX_MODEL_AGE_DAYS ]; then
+        log_warning "Model for $symbol is $model_age_days days old (threshold: $MAX_MODEL_AGE_DAYS days)"
+        return 0  # Needs retraining
+    fi
+    
+    # Check performance (if evaluation results exist)
+    local eval_file="$LOG_DIR/evaluation/${symbol,,}_evaluation.json"
+    if [ -f "$eval_file" ]; then
+        local accuracy=$(jq -r '.accuracy // 0' "$eval_file" 2>/dev/null || echo "0")
+        local mape=$(jq -r '.mape // 100' "$eval_file" 2>/dev/null || echo "100")
+        local confidence=$(jq -r '.confidence // 0' "$eval_file" 2>/dev/null || echo "0")
+        
+        if (( $(echo "$accuracy < $MIN_ACCURACY" | bc -l) )); then
+            log_warning "Model for $symbol has low accuracy: $accuracy% (threshold: $MIN_ACCURACY%)"
+            return 0  # Needs retraining
+        fi
+        
+        if (( $(echo "$mape > $MAX_MAPE" | bc -l) )); then
+            log_warning "Model for $symbol has high MAPE: $mape% (threshold: $MAX_MAPE%)"
+            return 0  # Needs retraining
+        fi
+        
+        if (( $(echo "$confidence < $MIN_CONFIDENCE" | bc -l) )); then
+            log_warning "Model for $symbol has low confidence: $confidence% (threshold: $MIN_CONFIDENCE%)"
+            return 0  # Needs retraining
+        fi
+    fi
+    
+    return 1  # No retraining needed
+}
+
+# Create backup before training
+create_backup() {
+    log_info "Creating backup before training..."
+    local backup_file="$BACKUPS_DIR/pre_training_backup_$(date +%Y%m%d_%H%M%S).tar.gz"
+    
+    if [ -d "$MODEL_DIR" ] && [ "$(ls -A $MODEL_DIR)" ]; then
+        tar -czf "$backup_file" -C "$PERSISTENT_DATA_DIR" ml_models scalers ml_cache 2>/dev/null || true
+        log_success "Backup created: $backup_file"
+    else
+        log_info "No existing models to backup"
+    fi
+}
+
+# Train models with persistent data
+train_models() {
+    local symbols_to_train="$1"
+    local force_training="$2"
+    
+    log_info "Starting training process with persistent data"
+    log_info "Persistent data directory: $PERSISTENT_DATA_DIR"
+    log_info "Models directory: $MODEL_DIR"
+    log_info "Scalers directory: $SCALERS_DIR"
+    log_info "Cache directory: $ML_CACHE_DIR"
+    
+    # Activate virtual environment if available
+    if [ -d "venv" ]; then
+        log_info "Activating virtual environment"
+        source venv/bin/activate
+    fi
+    
+    # Set environment variables for persistent data
+    export ML_MODEL_PATH="$MODEL_DIR"
+    export SCALERS_PATH="$SCALERS_DIR"
+    export ML_CACHE_PATH="$ML_CACHE_DIR"
+    export STOCK_DATA_CACHE_PATH="$STOCK_DATA_DIR/cache"
+    export LOG_PATH="$LOG_DIR"
+    
+    # Train models using manage_ml_models.sh with persistent data
+    if [ "$force_training" = "true" ]; then
+        log_info "Force training all models: $symbols_to_train"
+        ./manage_ml_models.sh train $symbols_to_train
+    else
+        # Check each symbol individually
+        local symbols_needing_training=""
+        for symbol in $symbols_to_train; do
+            if needs_retraining "$symbol"; then
+                symbols_needing_training="$symbols_needing_training $symbol"
+            else
+                log_info "Model for $symbol is up to date"
+            fi
+        done
+        
+        if [ -n "$symbols_needing_training" ]; then
+            log_info "Training models for symbols: $symbols_needing_training"
+            ./manage_ml_models.sh train $symbols_needing_training
+        else
+            log_info "All models are up to date"
+        fi
+    fi
+}
+
+# Evaluate trained models
+evaluate_models() {
+    local symbols="$1"
+    
+    log_info "Evaluating trained models"
+    mkdir -p "$LOG_DIR/evaluation"
+    
+    if [ -d "venv" ]; then
+        source venv/bin/activate
+    fi
+    
+    # Set environment variables
+    export ML_MODEL_PATH="$MODEL_DIR"
+    export SCALERS_PATH="$SCALERS_DIR"
+    
+    ./manage_ml_models.sh evaluate $symbols
+}
+
+# Update configuration after training
+update_config() {
+    log_info "Updating training configuration"
+    
+    # Update last training time
+    if [ -f "$CONFIG_FILE" ]; then
+        jq --arg date "$(date -Iseconds)" '.last_training = $date' "$CONFIG_FILE" > "$CONFIG_FILE.tmp" && mv "$CONFIG_FILE.tmp" "$CONFIG_FILE"
+    fi
+}
+
+# Main training logic
+main() {
+    local force_training=false
+    local symbols_to_train="$SYMBOLS"
+    
+    # Parse command line arguments
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --force)
+                force_training=true
+                shift
+                ;;
+            --symbols)
+                symbols_to_train="$2"
+                shift 2
+                ;;
+            *)
+                log_error "Unknown option: $1"
+                exit 1
+                ;;
+        esac
+    done
+    
+    log_critical "=== Enhanced Training Script - Persistent Data Edition ==="
+    log_info "Persistent data directory: $PERSISTENT_DATA_DIR"
+    log_info "Force training: $force_training"
+    log_info "Symbols to process: $symbols_to_train"
+    
+    # Initialize configuration
+    init_config
+    
+    # Create backup
+    create_backup
+    
+    # Train models
+    train_models "$symbols_to_train" "$force_training"
+    
+    # Evaluate models
+    evaluate_models "$symbols_to_train"
+    
+    # Update configuration
+    update_config
+    
+    log_success "=== Training process completed ==="
+    log_info "All data stored in persistent directory: $PERSISTENT_DATA_DIR"
+    log_info "Models: $MODEL_DIR"
+    log_info "Scalers: $SCALERS_DIR"
+    log_info "Logs: $LOG_DIR"
+    log_info "Backups: $BACKUPS_DIR"
+}
+
+# Run main function
+main "$@"
 }
 
 log_success() {

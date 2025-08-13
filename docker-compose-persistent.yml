@@ -1,0 +1,203 @@
+version: '3.8'
+
+# Stock Prediction System with Complete Persistent Data Integration
+# ALL data is stored in ./persistent_data/ for permanent persistence
+
+services:
+  # Angular Frontend with Bootstrap 5.3.3
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.working
+    ports:
+      - "8080:80"
+    environment:
+      - NGINX_HOST=localhost
+      - NGINX_PORT=80
+    volumes:
+      # Frontend logs to persistent storage
+      - ./persistent_data/frontend/logs:/var/log/nginx
+      - ./persistent_data/frontend/cache:/var/cache/nginx
+    depends_on:
+      stock-prediction:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - stock-prediction-network
+    labels:
+      - "com.docker.compose.service=frontend"
+      - "description=Bootstrap Angular Frontend with Persistent Logs"
+
+  # Go Backend API with ML Prediction Service
+  stock-prediction:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      # Server Configuration
+      - SERVER_PORT=8081
+      - SERVER_READ_TIMEOUT=30s
+      - SERVER_WRITE_TIMEOUT=30s
+      - LOG_LEVEL=info
+      
+      # Stock Configuration
+      - STOCK_SYMBOL=NVDA
+      - STOCK_LOOKBACK_DAYS=5
+      - STOCK_BUY_THRESHOLD=1.01
+      - STOCK_SELL_THRESHOLD=0.99
+      
+      # ML Configuration - ALL PATHS POINT TO PERSISTENT DATA
+      - ML_PYTHON_SCRIPT=scripts/ml/predict.py
+      - ML_MODEL_PATH=/app/persistent_data/ml_models/nvda_lstm_model
+      - ML_PREDICTION_TTL=5m
+      - STOCK_DATA_CACHE_PATH=/app/persistent_data/stock_data/cache
+      - ML_CACHE_PATH=/app/persistent_data/ml_cache
+      - SCALERS_PATH=/app/persistent_data/scalers
+      
+      # Cache Configuration
+      - REDIS_URL=redis://redis:6379
+      - CACHE_TTL=300
+      - CACHE_MAX_SIZE=1000
+      
+      # Logging Configuration
+      - LOG_PATH=/app/persistent_data/logs
+      - LOG_FILE=/app/persistent_data/logs/stock-prediction.log
+      
+      # CORS Configuration
+      - CORS_ORIGINS=*
+    volumes:
+      # CRITICAL: Mount entire persistent_data directory
+      - ./persistent_data:/app/persistent_data
+      # Mount scripts and models as read-only
+      - ./scripts:/app/scripts:ro
+      - ./models:/app/models:ro
+      # Application logs
+      - ./persistent_data/logs:/app/logs
+      # Configuration files
+      - ./persistent_data/config:/app/config
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8081/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - stock-prediction-network
+    labels:
+      - "com.docker.compose.service=backend"
+      - "description=Go Backend with Persistent ML Data Storage"
+
+  # Redis Cache with Persistent Storage
+  redis:
+    image: redis:7.2-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru --dir /data
+    volumes:
+      # Redis data persistence
+      - ./persistent_data/redis:/data
+      # Redis configuration
+      - ./persistent_data/config/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - stock-prediction-network
+    labels:
+      - "com.docker.compose.service=cache"
+      - "description=Redis Cache with Persistent Data Storage"
+
+  # Prometheus Monitoring with Persistent Storage
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    volumes:
+      # Prometheus configuration
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/rules:/etc/prometheus/rules:ro
+      # PERSISTENT DATA: Prometheus metrics storage
+      - ./persistent_data/prometheus:/prometheus
+      # Prometheus logs
+      - ./persistent_data/logs/prometheus:/var/log/prometheus
+    depends_on:
+      - stock-prediction
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - stock-prediction-network
+    labels:
+      - "com.docker.compose.service=monitoring"
+      - "description=Prometheus with Persistent Metrics Storage"
+
+  # Grafana Dashboards with Persistent Storage
+  grafana:
+    image: grafana/grafana:10.1.0
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_PATHS_DATA=/var/lib/grafana
+      - GF_PATHS_LOGS=/var/log/grafana
+    volumes:
+      # PERSISTENT DATA: Grafana database and dashboards
+      - ./persistent_data/grafana:/var/lib/grafana
+      # Grafana logs
+      - ./persistent_data/logs/grafana:/var/log/grafana
+      # Grafana configuration
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - stock-prediction-network
+    user: "472:472"
+    labels:
+      - "com.docker.compose.service=visualization"
+      - "description=Grafana with Persistent Dashboard Storage"
+
+# Networks
+networks:
+  stock-prediction-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.27.0.0/16
+
+# NOTE: No volumes section needed - all data is bind-mounted from ./persistent_data/
+# This ensures complete data persistence and easy backup/restore

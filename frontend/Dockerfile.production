@@ -1,0 +1,71 @@
+# Production Dockerfile for Bootstrap-Enhanced Angular Frontend
+# Fixes nginx permission issues and optimizes for production
+
+# Stage 1: Build Angular Application with Bootstrap
+FROM node:20-alpine AS build
+
+# Set working directory
+WORKDIR /app
+
+# Install build dependencies
+RUN apk add --no-cache git python3 make g++
+
+# Copy package files
+COPY package*.json ./
+
+# Set npm configuration for better performance
+RUN npm config set registry https://registry.npmjs.org/
+RUN npm config set fetch-retries 3
+RUN npm config set fetch-retry-factor 2
+RUN npm config set fetch-retry-mintimeout 10000
+RUN npm config set fetch-retry-maxtimeout 60000
+
+# Install dependencies
+RUN npm ci --no-audit --no-fund
+
+# Copy source code
+COPY . .
+
+# Build Angular application for production
+RUN npx ng build --configuration=production
+
+# Verify build output
+RUN ls -la dist/frontend/
+RUN find dist/frontend -name "*.css" -exec grep -l "bootstrap" {} \; || echo "Bootstrap CSS verification"
+RUN find dist/frontend -name "*.js" -exec grep -l "bootstrap" {} \; || echo "Bootstrap JS verification"
+
+# Stage 2: Production Server with Fixed Permissions
+FROM node:20-alpine
+
+# Install serve package for serving static files
+RUN npm install -g serve
+
+# Create app user and directories
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -u 1001 -S appuser -G appgroup
+
+# Set working directory
+WORKDIR /app
+
+# Copy built application from build stage
+COPY --from=build /app/dist/frontend ./dist
+COPY --from=build /app/package.json ./
+
+# Create health check file
+RUN echo '{"status":"healthy","service":"frontend","version":"v3.3.0"}' > ./dist/health
+
+# Change ownership to app user
+RUN chown -R appuser:appgroup /app
+
+# Switch to non-root user
+USER appuser
+
+# Expose port
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+
+# Start the application using serve
+CMD ["serve", "-s", "dist", "-l", "8080", "--no-clipboard"]

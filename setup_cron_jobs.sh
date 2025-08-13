@@ -1,317 +1,273 @@
 #!/bin/bash
 
-# Cron Jobs Setup Script
-# Sets up automatic training and monitoring schedules
+# Setup Cron Jobs for ML Stock Prediction - Persistent Data Edition
+# ALL jobs use persistent_data/ directory structure
 
 set -e
 
-PROJECT_DIR="$(pwd)"
-USER=$(whoami)
+# PERSISTENT DATA PATHS - MANDATORY
+PERSISTENT_DATA_DIR="./persistent_data"
+LOG_DIR="$PERSISTENT_DATA_DIR/logs"
+TRAINING_LOG_DIR="$LOG_DIR/training"
+MONITORING_LOG_DIR="$LOG_DIR/monitoring"
+CLEANUP_LOG_DIR="$LOG_DIR/cleanup"
+
+# Ensure persistent data structure exists
+if [ ! -d "$PERSISTENT_DATA_DIR" ]; then
+    echo "🚨 ERROR: persistent_data directory not found!"
+    echo "Run: ./setup_persistent_data.sh"
+    exit 1
+fi
+
+# Create required log directories
+mkdir -p "$TRAINING_LOG_DIR" "$MONITORING_LOG_DIR" "$CLEANUP_LOG_DIR"
+
+# Get absolute path for cron jobs
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+echo "🕐 Setting up Cron Jobs for ML Stock Prediction - Persistent Data Edition"
+echo "========================================================================"
+echo "Script directory: $SCRIPT_DIR"
+echo "Persistent data directory: $PERSISTENT_DATA_DIR"
+echo ""
 
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m'
+PURPLE='\033[0;35m'
+NC='\033[0m' # No Color
 
-log_info() {
+print_status() {
     echo -e "${BLUE}[INFO]${NC} $1"
 }
 
-log_success() {
+print_success() {
     echo -e "${GREEN}[SUCCESS]${NC} $1"
 }
 
-log_warning() {
+print_warning() {
     echo -e "${YELLOW}[WARNING]${NC} $1"
 }
 
-log_error() {
+print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Create cron job entries
-create_cron_entries() {
-    local temp_cron=$(mktemp)
+print_critical() {
+    echo -e "${PURPLE}[CRITICAL]${NC} $1"
+}
+
+# Create cron job entries with persistent data paths
+create_cron_jobs() {
+    print_status "Creating cron job entries with persistent data integration..."
     
-    # Get existing crontab (if any)
-    crontab -l 2>/dev/null > "$temp_cron" || true
+    # Create temporary cron file
+    local temp_cron_file="/tmp/ml_stock_prediction_cron_$(date +%s)"
     
-    # Remove any existing ML training jobs
-    grep -v "enhanced_training.sh\|monitor_performance.sh" "$temp_cron" > "${temp_cron}.clean" || true
-    mv "${temp_cron}.clean" "$temp_cron"
-    
-    log_info "Adding new cron jobs..."
+    # Get current cron jobs (excluding our ML jobs)
+    crontab -l 2>/dev/null | grep -v "# ML Stock Prediction Automatic Jobs" | grep -v "enhanced_training.sh" | grep -v "monitor_performance.sh" | grep -v "manage_ml_models.sh" > "$temp_cron_file" || true
     
     # Add header comment
-    echo "" >> "$temp_cron"
-    echo "# ML Stock Prediction Automatic Jobs" >> "$temp_cron"
-    echo "# Generated on $(date)" >> "$temp_cron"
+    echo "" >> "$temp_cron_file"
+    echo "# ML Stock Prediction Automatic Jobs - Persistent Data Edition" >> "$temp_cron_file"
+    echo "# Generated on $(date)" >> "$temp_cron_file"
+    echo "# All jobs use persistent_data/ directory structure" >> "$temp_cron_file"
     
-    # Weekly training (Sunday 2 AM)
-    echo "0 2 * * 0 cd $PROJECT_DIR && ./enhanced_training.sh >> logs/training/cron.log 2>&1" >> "$temp_cron"
+    # Weekly comprehensive training (Sundays at 2 AM)
+    echo "0 2 * * 0 cd $SCRIPT_DIR && ./enhanced_training.sh >> $TRAINING_LOG_DIR/weekly.log 2>&1" >> "$temp_cron_file"
     
-    # Daily performance monitoring (every 6 hours during market days)
-    echo "0 6,12,18 * * 1-5 cd $PROJECT_DIR && ./monitor_performance.sh >> logs/monitoring/cron.log 2>&1" >> "$temp_cron"
+    # Performance monitoring (Every 6 hours on weekdays)
+    echo "0 6,12,18 * * 1-5 cd $SCRIPT_DIR && ./monitor_performance.sh >> $MONITORING_LOG_DIR/performance.log 2>&1" >> "$temp_cron_file"
     
-    # Monthly comprehensive training (1st of month, 1 AM)
-    echo "0 1 1 * * cd $PROJECT_DIR && ./enhanced_training.sh --force >> logs/training/monthly.log 2>&1" >> "$temp_cron"
+    # Monthly comprehensive training (1st of each month at 1 AM)
+    echo "0 1 1 * * cd $SCRIPT_DIR && ./enhanced_training.sh --force >> $TRAINING_LOG_DIR/monthly.log 2>&1" >> "$temp_cron_file"
     
-    # Daily cleanup (3 AM)
-    echo "0 3 * * * cd $PROJECT_DIR && ./manage_ml_models.sh clean >> logs/cleanup.log 2>&1" >> "$temp_cron"
+    # Daily cleanup (Every day at 3 AM)
+    echo "0 3 * * * cd $SCRIPT_DIR && ./manage_ml_models.sh clean >> $CLEANUP_LOG_DIR/daily.log 2>&1" >> "$temp_cron_file"
     
-    # Install the new crontab
-    crontab "$temp_cron"
-    rm "$temp_cron"
+    # Backup models (Every day at 4 AM)
+    echo "0 4 * * * cd $SCRIPT_DIR && ./manage_ml_models.sh backup >> $CLEANUP_LOG_DIR/backup.log 2>&1" >> "$temp_cron_file"
     
-    log_success "Cron jobs installed successfully"
+    # Monitor disk usage for persistent data (Every 2 hours)
+    echo "0 */2 * * * cd $SCRIPT_DIR && du -sh $PERSISTENT_DATA_DIR >> $MONITORING_LOG_DIR/disk_usage.log 2>&1" >> "$temp_cron_file"
+    
+    # Install the new cron jobs
+    crontab "$temp_cron_file"
+    
+    # Clean up temporary file
+    rm "$temp_cron_file"
+    
+    print_success "Cron jobs installed successfully"
 }
 
-# Create log directories
-setup_log_directories() {
-    log_info "Setting up log directories..."
+# Verify cron jobs
+verify_cron_jobs() {
+    print_status "Verifying installed cron jobs..."
     
-    mkdir -p logs/training
-    mkdir -p logs/monitoring
-    mkdir -p logs/cron
-    
-    # Create log rotation configuration
-    cat > logs/logrotate.conf << EOF
-$PROJECT_DIR/logs/training/*.log {
-    daily
-    rotate 30
-    compress
-    delaycompress
-    missingok
-    notifempty
-    create 644 $USER $USER
+    echo ""
+    echo "📋 Current Cron Jobs:"
+    echo "===================="
+    crontab -l | grep -A 20 "ML Stock Prediction" || print_warning "No ML cron jobs found"
+    echo ""
 }
 
-$PROJECT_DIR/logs/monitoring/*.log {
-    daily
-    rotate 7
-    compress
-    delaycompress
-    missingok
-    notifempty
-    create 644 $USER $USER
-}
-EOF
+# Test cron job scripts
+test_scripts() {
+    print_status "Testing cron job scripts with persistent data..."
     
-    log_success "Log directories and rotation configured"
-}
-
-# Create systemd service (alternative to cron)
-create_systemd_service() {
-    local service_dir="$HOME/.config/systemd/user"
-    mkdir -p "$service_dir"
+    # Test enhanced training script
+    if [ -f "$SCRIPT_DIR/enhanced_training.sh" ]; then
+        if [ -x "$SCRIPT_DIR/enhanced_training.sh" ]; then
+            print_success "enhanced_training.sh is executable"
+        else
+            print_error "enhanced_training.sh is not executable"
+            chmod +x "$SCRIPT_DIR/enhanced_training.sh"
+            print_success "Made enhanced_training.sh executable"
+        fi
+    else
+        print_error "enhanced_training.sh not found"
+    fi
     
-    # Training service
-    cat > "$service_dir/ml-training.service" << EOF
-[Unit]
-Description=ML Stock Prediction Training
-After=network.target
-
-[Service]
-Type=oneshot
-WorkingDirectory=$PROJECT_DIR
-ExecStart=$PROJECT_DIR/enhanced_training.sh
-User=$USER
-StandardOutput=append:$PROJECT_DIR/logs/training/systemd.log
-StandardError=append:$PROJECT_DIR/logs/training/systemd.log
-
-[Install]
-WantedBy=default.target
-EOF
-
-    # Training timer (weekly)
-    cat > "$service_dir/ml-training.timer" << EOF
-[Unit]
-Description=Run ML Training Weekly
-Requires=ml-training.service
-
-[Timer]
-OnCalendar=Sun 02:00
-Persistent=true
-
-[Install]
-WantedBy=timers.target
-EOF
-
-    # Monitoring service
-    cat > "$service_dir/ml-monitoring.service" << EOF
-[Unit]
-Description=ML Performance Monitoring
-After=network.target
-
-[Service]
-Type=oneshot
-WorkingDirectory=$PROJECT_DIR
-ExecStart=$PROJECT_DIR/monitor_performance.sh
-User=$USER
-StandardOutput=append:$PROJECT_DIR/logs/monitoring/systemd.log
-StandardError=append:$PROJECT_DIR/logs/monitoring/systemd.log
-
-[Install]
-WantedBy=default.target
-EOF
-
-    # Monitoring timer (every 6 hours on weekdays)
-    cat > "$service_dir/ml-monitoring.timer" << EOF
-[Unit]
-Description=Run ML Monitoring Every 6 Hours
-Requires=ml-monitoring.service
-
-[Timer]
-OnCalendar=Mon..Fri 06,12,18:00
-Persistent=true
-
-[Install]
-WantedBy=timers.target
-EOF
-
-    log_success "Systemd services created in $service_dir"
-    log_info "To enable systemd timers, run:"
-    log_info "  systemctl --user daemon-reload"
-    log_info "  systemctl --user enable ml-training.timer"
-    log_info "  systemctl --user enable ml-monitoring.timer"
-    log_info "  systemctl --user start ml-training.timer"
-    log_info "  systemctl --user start ml-monitoring.timer"
+    # Test monitoring script
+    if [ -f "$SCRIPT_DIR/monitor_performance.sh" ]; then
+        if [ -x "$SCRIPT_DIR/monitor_performance.sh" ]; then
+            print_success "monitor_performance.sh is executable"
+        else
+            print_error "monitor_performance.sh is not executable"
+            chmod +x "$SCRIPT_DIR/monitor_performance.sh"
+            print_success "Made monitor_performance.sh executable"
+        fi
+    else
+        print_error "monitor_performance.sh not found"
+    fi
+    
+    # Test model management script
+    if [ -f "$SCRIPT_DIR/manage_ml_models.sh" ]; then
+        if [ -x "$SCRIPT_DIR/manage_ml_models.sh" ]; then
+            print_success "manage_ml_models.sh is executable"
+        else
+            print_error "manage_ml_models.sh is not executable"
+            chmod +x "$SCRIPT_DIR/manage_ml_models.sh"
+            print_success "Made manage_ml_models.sh executable"
+        fi
+    else
+        print_error "manage_ml_models.sh not found"
+    fi
+    
+    # Test persistent data directory access
+    if [ -w "$PERSISTENT_DATA_DIR" ]; then
+        print_success "Persistent data directory is writable"
+    else
+        print_error "Persistent data directory is not writable: $PERSISTENT_DATA_DIR"
+    fi
 }
 
 # Create monitoring dashboard script
 create_dashboard() {
-    cat > dashboard.sh << 'EOF'
+    print_status "Creating monitoring dashboard script..."
+    
+    cat > "$SCRIPT_DIR/dashboard.sh" << 'EOF'
 #!/bin/bash
 
-# Simple monitoring dashboard
+# ML Stock Prediction Dashboard - Persistent Data Edition
 
-echo "=== ML Stock Prediction Dashboard ==="
-echo "Generated: $(date)"
-echo
+PERSISTENT_DATA_DIR="./persistent_data"
+LOG_DIR="$PERSISTENT_DATA_DIR/logs"
 
-echo "=== Model Status ==="
-./manage_ml_models.sh status | grep -E "(✅|❌)"
-echo
+echo "🎯 ML Stock Prediction System Dashboard - Persistent Data Edition"
+echo "================================================================="
+echo "Timestamp: $(date)"
+echo "Persistent Data Directory: $PERSISTENT_DATA_DIR"
+echo ""
 
-echo "=== Recent Training Logs ==="
-if [ -f "logs/training/training.log" ]; then
-    tail -n 5 logs/training/training.log
+# System status
+echo "📊 System Status:"
+echo "=================="
+if [ -d "$PERSISTENT_DATA_DIR" ]; then
+    echo "✅ Persistent data directory: $(du -sh $PERSISTENT_DATA_DIR | cut -f1)"
 else
-    echo "No training logs found"
+    echo "❌ Persistent data directory missing"
 fi
-echo
 
-echo "=== Recent Performance ==="
-if [ -f "logs/monitoring/performance_history.jsonl" ]; then
-    echo "Last 3 performance checks:"
-    tail -n 3 logs/monitoring/performance_history.jsonl | jq -r '"\(.timestamp) \(.symbol): \(.confidence) confidence"' 2>/dev/null || tail -n 3 logs/monitoring/performance_history.jsonl
+# Model status
+echo ""
+echo "🧠 ML Models:"
+echo "============="
+if [ -d "$PERSISTENT_DATA_DIR/ml_models" ]; then
+    find "$PERSISTENT_DATA_DIR/ml_models" -name "*.h5" -exec basename {} \; | sort
 else
-    echo "No performance data found"
+    echo "❌ No models directory found"
 fi
-echo
 
-echo "=== System Health ==="
-echo "Disk usage: $(df . | awk 'NR==2 {print $5}')"
-echo "Memory usage: $(free | grep Mem | awk '{printf "%.1f%%", $3/$2 * 100.0}')"
-echo "Load average: $(uptime | awk -F'load average:' '{print $2}')"
-echo
+# Recent logs
+echo ""
+echo "📝 Recent Activity:"
+echo "==================="
+if [ -f "$LOG_DIR/training/training.log" ]; then
+    echo "Last training activity:"
+    tail -3 "$LOG_DIR/training/training.log" 2>/dev/null || echo "No training logs"
+fi
 
-echo "=== Next Scheduled Jobs ==="
-echo "Cron jobs:"
-crontab -l 2>/dev/null | grep -E "(enhanced_training|monitor_performance)" || echo "No cron jobs found"
+if [ -f "$LOG_DIR/monitoring/performance.log" ]; then
+    echo ""
+    echo "Last monitoring activity:"
+    tail -3 "$LOG_DIR/monitoring/performance.log" 2>/dev/null || echo "No monitoring logs"
+fi
+
+# Disk usage
+echo ""
+echo "💾 Storage Usage:"
+echo "=================="
+df -h "$PERSISTENT_DATA_DIR" | tail -1
+
+echo ""
+echo "🔄 Cron Jobs Status:"
+echo "===================="
+crontab -l | grep -A 10 "ML Stock Prediction" || echo "No cron jobs found"
 EOF
-
-    chmod +x dashboard.sh
-    log_success "Dashboard script created: ./dashboard.sh"
+    
+    chmod +x "$SCRIPT_DIR/dashboard.sh"
+    print_success "Dashboard script created: $SCRIPT_DIR/dashboard.sh"
 }
 
 # Main setup function
 main() {
-    local setup_cron=true
-    local setup_systemd=false
-    local setup_dashboard=true
+    print_critical "=== Setting up Cron Jobs - Persistent Data Edition ==="
+    print_status "Persistent data directory: $PERSISTENT_DATA_DIR"
+    print_status "Script directory: $SCRIPT_DIR"
     
-    # Parse command line arguments
-    while [[ $# -gt 0 ]]; do
-        case $1 in
-            --no-cron)
-                setup_cron=false
-                shift
-                ;;
-            --systemd)
-                setup_systemd=true
-                shift
-                ;;
-            --no-dashboard)
-                setup_dashboard=false
-                shift
-                ;;
-            --help)
-                echo "Usage: $0 [--no-cron] [--systemd] [--no-dashboard]"
-                echo "  --no-cron       Skip cron job setup"
-                echo "  --systemd       Create systemd services (in addition to or instead of cron)"
-                echo "  --no-dashboard  Skip dashboard creation"
-                exit 0
-                ;;
-            *)
-                log_error "Unknown option: $1"
-                exit 1
-                ;;
-        esac
-    done
+    # Test scripts first
+    test_scripts
     
-    log_info "=== Setting up automatic ML training and monitoring ==="
-    log_info "Project directory: $PROJECT_DIR"
+    # Create cron jobs
+    create_cron_jobs
     
-    # Setup log directories
-    setup_log_directories
-    
-    # Setup cron jobs
-    if [ "$setup_cron" = true ]; then
-        log_info "Setting up cron jobs..."
-        create_cron_entries
-        
-        # Show installed cron jobs
-        echo
-        log_info "Installed cron jobs:"
-        crontab -l | grep -E "(enhanced_training|monitor_performance|manage_ml_models)" || true
-    fi
-    
-    # Setup systemd services
-    if [ "$setup_systemd" = true ]; then
-        log_info "Setting up systemd services..."
-        create_systemd_service
-    fi
+    # Verify installation
+    verify_cron_jobs
     
     # Create dashboard
-    if [ "$setup_dashboard" = true ]; then
-        log_info "Creating monitoring dashboard..."
-        create_dashboard
-    fi
+    create_dashboard
     
-    echo
-    log_success "=== Setup completed successfully! ==="
-    echo
-    log_info "Automatic schedules configured:"
-    log_info "  📅 Weekly training: Sundays at 2:00 AM"
-    log_info "  📊 Performance monitoring: Every 6 hours (weekdays)"
-    log_info "  🔄 Monthly comprehensive training: 1st of month at 1:00 AM"
-    log_info "  🧹 Daily cleanup: Every day at 3:00 AM"
-    echo
-    log_info "Manual commands available:"
-    log_info "  ./enhanced_training.sh --force    # Force training now"
-    log_info "  ./monitor_performance.sh          # Check performance now"
-    log_info "  ./dashboard.sh                    # View dashboard"
-    log_info "  ./manage_ml_models.sh status      # Check model status"
-    echo
-    log_info "Logs will be stored in:"
-    log_info "  logs/training/     # Training logs"
-    log_info "  logs/monitoring/   # Performance monitoring logs"
-    echo
-    log_warning "Note: Make sure your Go service is running for performance monitoring to work"
+    print_success "=== Cron job setup completed ==="
+    
+    echo ""
+    echo "📋 Scheduled Jobs (Persistent Data Edition):"
+    echo "============================================="
+    echo "🕐 Weekly Training:     Sundays at 2:00 AM"
+    echo "🕐 Performance Monitor: Every 6 hours (weekdays)"
+    echo "🕐 Monthly Training:    1st of month at 1:00 AM"
+    echo "🕐 Daily Cleanup:       Every day at 3:00 AM"
+    echo "🕐 Daily Backup:        Every day at 4:00 AM"
+    echo "🕐 Disk Monitor:        Every 2 hours"
+    echo ""
+    echo "📁 All logs stored in: $LOG_DIR"
+    echo "📊 View dashboard: ./dashboard.sh"
+    echo ""
+    print_critical "🔥 IMPORTANT: All jobs use persistent_data/ directory structure"
+    print_warning "Ensure persistent_data/ directory is never deleted!"
 }
 
-# Run main function with all arguments
+# Run main function
 main "$@"
