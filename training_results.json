@@ -1,0 +1,28 @@
+{
+  "training_date": "2025-08-13T12:00:08.796363",
+  "models_trained": 2,
+  "results": [
+    {
+      "symbol": "MSFT",
+      "mse": 29.759989525521537,
+      "mae": 4.554072545780089,
+      "mape": 0.8942845850420041,
+      "direction_accuracy": 37.5,
+      "predictions_count": 41
+    },
+    {
+      "symbol": "GOOGL",
+      "mse": 15.594511801196083,
+      "mae": 3.3905863694565475,
+      "mape": 1.8246354871169361,
+      "direction_accuracy": 65.0,
+      "predictions_count": 41
+    }
+  ],
+  "average_metrics": {
+    "avg_mse": 22.67725066335881,
+    "avg_mae": 3.9723294576183186,
+    "avg_mape": 1.3594600360794702,
+    "avg_direction_accuracy": 51.25
+  }
+}

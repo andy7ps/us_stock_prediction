@@ -109,12 +109,48 @@ class AdvancedFeatureEngineer:
     
     def prepare_lstm_data(self, df, sequence_length=60, target_col='close'):
         """Prepare data for LSTM training."""
-        # Select features for training
-        feature_cols = [col for col in df.columns if not col.startswith('date') and col != target_col]
-        feature_cols = [col for col in feature_cols if not df[col].isna().all()]
+        # Make a copy to avoid modifying original data
+        df_work = df.copy()
         
-        # Fill NaN values
-        df_clean = df[feature_cols + [target_col]].fillna(method='ffill').fillna(method='bfill')
+        # Remove date/timestamp columns and non-numeric columns
+        exclude_cols = ['date', 'Date', 'datetime', 'Datetime', target_col]
+        feature_cols = []
+        
+        for col in df_work.columns:
+            if col not in exclude_cols:
+                # Check if column is numeric
+                try:
+                    pd.to_numeric(df_work[col], errors='raise')
+                    if not df_work[col].isna().all():
+                        feature_cols.append(col)
+                except (ValueError, TypeError):
+                    # Skip non-numeric columns
+                    continue
+        
+        if len(feature_cols) == 0:
+            # Fallback to basic price features
+            feature_cols = ['open', 'high', 'low', 'volume']
+            feature_cols = [col for col in feature_cols if col in df_work.columns]
+        
+        # Ensure target column exists and is numeric
+        if target_col not in df_work.columns:
+            raise ValueError(f"Target column '{target_col}' not found in data")
+        
+        # Select only numeric columns
+        df_clean = df_work[feature_cols + [target_col]].copy()
+        
+        # Convert to numeric, coercing errors to NaN
+        for col in df_clean.columns:
+            df_clean[col] = pd.to_numeric(df_clean[col], errors='coerce')
+        
+        # Fill NaN values using forward fill and backward fill
+        df_clean = df_clean.fillna(method='ffill').fillna(method='bfill')
+        
+        # Remove any remaining NaN rows
+        df_clean = df_clean.dropna()
+        
+        if len(df_clean) < sequence_length + 10:
+            raise ValueError(f"Insufficient data after cleaning: {len(df_clean)} rows")
         
         # Scale features
         feature_scaler = MinMaxScaler()

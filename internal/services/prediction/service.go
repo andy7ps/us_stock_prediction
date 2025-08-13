@@ -121,7 +121,13 @@ func (s *Service) callPythonModel(ctx context.Context, prices []float64) (float6
 	}).Debug("Calling Python model")
 	
 	// Create command with context for timeout
-	cmd := exec.CommandContext(ctx, "python3", s.config.ML.PythonScript, inputString)
+	// Use virtual environment Python interpreter
+	venvPython := "venv/bin/python3"
+	if _, err := os.Stat(venvPython); os.IsNotExist(err) {
+		// Fallback to system python if venv doesn't exist
+		venvPython = "python3"
+	}
+	cmd := exec.CommandContext(ctx, venvPython, s.config.ML.PythonScript, inputString)
 	
 	// Set working directory to project root to ensure model files are found
 	// Note: ModelPath is a file path, not a directory path

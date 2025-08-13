@@ -97,15 +97,18 @@ fi
 
 # Test 3: Check Python dependencies
 print_test "Checking Python dependencies..."
-required_packages=("numpy" "pandas" "scikit-learn")
+required_packages=("numpy" "pandas" "sklearn")
+package_names=("numpy" "pandas" "scikit-learn")
 missing_packages=()
 
-for package in "${required_packages[@]}"; do
+for i in "${!required_packages[@]}"; do
+    package="${required_packages[$i]}"
+    display_name="${package_names[$i]}"
     if python3 -c "import $package" 2>/dev/null; then
-        echo "  ✓ $package"
+        echo "  ✓ $display_name"
     else
-        echo "  ✗ $package (missing)"
-        missing_packages+=("$package")
+        echo "  ✗ $display_name (missing)"
+        missing_packages+=("$display_name")
     fi
 done
 

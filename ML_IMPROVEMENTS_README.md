@@ -24,7 +24,33 @@ This document outlines the comprehensive machine learning improvements implement
 - **Volume Analysis**: Price-volume relationships and patterns
 - **Trend Analysis**: Multi-timeframe trend detection
 
-### 4. **Comprehensive Evaluation Framework**
+### 4. **Automatic Training & Monitoring** *(New in v3.3)*
+- **Intelligent Retraining**: Age-based and performance-based triggers
+- **Real-time Monitoring**: API performance and model health tracking
+- **Scheduled Training**: Weekly, monthly, and on-demand training
+- **Performance Thresholds**: Automatic retraining when metrics degrade
+
+### 5. **13 Stock Symbol Support** *(Expanded in v3.3)*
+**Currently Trained (5)**: NVDA, TSLA, AAPL, MSFT, GOOGL
+**Ready for Training (8)**: AMZN, AUR, PLTR, SMCI, TSM, MP, SMR, SPY
+
+| Symbol | Status | Direction Accuracy | MAPE | Confidence |
+|--------|--------|-------------------|------|------------|
+| NVDA   | ✅ Trained | 45.00% | 1.85% | 72.5% |
+| TSLA   | ✅ Trained | 52.50% | 3.54% | 70.5% |
+| AAPL   | ✅ Trained | 50.00% | 2.00% | 63.5% |
+| MSFT   | ✅ Trained | 37.50% | 0.89% | 68.3% |
+| GOOGL  | ✅ Trained | 65.00% | 1.82% | 67.2% |
+| AMZN   | 🔄 Ready | - | - | - |
+| AUR    | 🔄 Ready | - | - | - |
+| PLTR   | 🔄 Ready | - | - | - |
+| SMCI   | 🔄 Ready | - | - | - |
+| TSM    | 🔄 Ready | - | - | - |
+| MP     | 🔄 Ready | - | - | - |
+| SMR    | 🔄 Ready | - | - | - |
+| SPY    | 🔄 Ready | - | - | - |
+
+### 6. **Comprehensive Evaluation Framework**
 - **Backtesting**: Historical performance validation
 - **Multiple Metrics**: Direction accuracy, MAPE, Sharpe ratio, correlation
 - **Trading Simulation**: Real trading performance metrics
@@ -42,16 +68,29 @@ scripts/ml/
 ├── enhanced_predict.py    # Enhanced statistical methods (existing)
 └── predict.py            # Basic fallback model (existing)
 
+# New Automatic Training & Monitoring Scripts
+├── enhanced_training.sh    # Intelligent automatic training
+├── monitor_performance.sh  # Real-time performance monitoring
+├── setup_cron_jobs.sh     # Automatic scheduling setup
+├── manage_ml_models.sh    # Enhanced model management (updated)
+└── dashboard.sh           # Monitoring dashboard (auto-created)
+
 persistent_data/ml_models/  # Trained model storage
-├── nvda_lstm_model.h5     # LSTM model files
-├── ensemble_models.pkl    # Sklearn ensemble models
-├── *_scalers.pkl         # Feature scalers
+├── nvda_lstm_model.h5     # NVIDIA LSTM model (✅ Trained)
+├── tsla_lstm_model.h5     # Tesla LSTM model (✅ Trained)
+├── aapl_lstm_model.h5     # Apple LSTM model (✅ Trained)
+├── msft_lstm_model.h5     # Microsoft LSTM model (✅ Trained)
+├── googl_lstm_model.h5    # Google LSTM model (✅ Trained)
+├── *_scalers.pkl         # Feature scalers for each model
 └── ml_config.json        # ML configuration
 
-evaluation_results/         # Evaluation reports and plots
-├── NVDA_evaluation_report.json
-├── NVDA_evaluation_plots.png
-└── evaluation_summary.json
+logs/                      # Logging system
+├── training/             # Training logs and history
+├── monitoring/           # Performance monitoring logs
+└── cron/                # Automatic job logs
+
+evaluation_results/        # Model evaluation reports
+└── *_evaluation_report.json
 ```
 
 ## 🛠️ Installation & Setup

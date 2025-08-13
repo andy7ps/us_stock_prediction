@@ -119,30 +119,68 @@ cd us_stock_prediction
 - [Contributing](#-contributing)
 - [License](#-license)
 
-## 🧠 **Advanced ML Intelligence** *(New in v3.3)*
+## 🤖 **Advanced ML Intelligence** *(Enhanced in v3.3)*
 
 ### **Neural Network Architecture**
 - **🧠 Deep LSTM Networks**: Multi-layer neural networks with 128→64→32 neurons
 - **📊 50+ Features**: Advanced technical indicators, volatility, momentum analysis
 - **🎯 Ensemble Intelligence**: Combines LSTM, statistical methods, and gradient boosting
 - **⚡ Dynamic Weighting**: Adapts model weights based on market conditions
+- **🔄 Automatic Training**: Intelligent retraining based on age and performance
+- **📊 Performance Monitoring**: Real-time model performance tracking
+
+### **Supported Stock Symbols** *(Expanded in v3.3)*
+The system now supports **13 popular stock symbols**:
+- **Tech Giants**: NVDA, TSLA, AAPL, MSFT, GOOGL, AMZN
+- **Growth Stocks**: AUR, PLTR, SMCI
+- **International**: TSM (Taiwan Semiconductor)
+- **Materials**: MP (MP Materials)
+- **Energy**: SMR (NuScale Power)
+- **ETF**: SPY (S&P 500 ETF)
 
 ### **Performance Improvements**
-- **📈 65-75% Direction Accuracy** (vs 50-55% baseline)
-- **📉 3-8% MAPE Error Rate** (vs 10-15% baseline)  
-- **🎯 0.7-0.9 Correlation** (vs 0.3-0.5 baseline)
-- **💰 1.2-2.0 Sharpe Ratio** (vs 0.5-0.8 baseline)
+- **📈 37-65% Direction Accuracy** (vs 50% random baseline)
+- **📉 0.89-3.54% MAPE Error Rate** (vs 10-15% baseline)  
+- **🎯 63-73% Confidence Scores** (reliable predictions)
+- **💰 Automatic Retraining** when performance degrades
+- **⚡ 2-3 Second Response Time** for real-time predictions
+- **🔄 13 Stock Symbols** supported with intelligent training
+
+## 📅 **Automatic Training & Monitoring** *(New in v3.3)*
+
+### **Intelligent Retraining System**
+- **🔄 Age-Based**: Automatically retrain models older than 7 days
+- **📊 Performance-Based**: Retrain when accuracy drops below 45%
+- **🎯 Confidence-Based**: Retrain when confidence falls below 60%
+- **⏰ Scheduled**: Weekly training (Sundays 2 AM), Monthly comprehensive (1st of month)
+- **📈 Monitoring**: Performance checks every 6 hours on weekdays
+
+### **Automatic Schedules**
+```bash
+# Setup automatic training and monitoring
+./setup_cron_jobs.sh
+
+# Manual operations
+./enhanced_training.sh                    # Smart retraining
+./monitor_performance.sh                  # Performance monitoring
+./dashboard.sh                            # System dashboard
+```
+
+### **Performance Thresholds**
+- **Model Age**: > 7 days → Automatic retraining
+- **Direction Accuracy**: < 45% → Performance-based retraining  
+- **MAPE Error**: > 5% → Performance-based retraining
+- **Confidence Score**: < 60% → Performance-based retraining
 
 ### **ML Management Tools**
 ```bash
-# Setup advanced ML models
-./setup_ml_improvements.sh
-
-# Train models with real data
-./manage_ml_models.sh train NVDA TSLA AAPL
-
-# Evaluate performance
-./manage_ml_models.sh evaluate NVDA TSLA AAPL
+# Enhanced model management
+./manage_ml_models.sh train-all           # Train all 13 symbols
+./manage_ml_models.sh quick-train NVDA    # Quick training (10 epochs)
+./manage_ml_models.sh status              # Comprehensive status
+./manage_ml_models.sh test-symbol MSFT    # Test API for specific symbol
+./manage_ml_models.sh performance         # Run performance monitoring
+./manage_ml_models.sh backup              # Backup current models
 ```
 
 ## ✨ **Features**
