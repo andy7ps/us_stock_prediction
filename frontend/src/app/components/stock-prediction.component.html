@@ -1,41 +1,35 @@
-<!-- Bootstrap-Enhanced Stock Prediction Interface -->
-<div class="container-fluid py-4">
+<!-- Mobile-Optimized Stock Prediction Interface -->
+<div class="container-fluid px-2 px-md-3 py-3">
   <!-- Header Section -->
-  <header class="text-center mb-5 fade-in">
-    <h1 class="display-4 fw-bold text-gradient mb-3">
-      📈 US Stock Prediction Service
+  <header class="text-center mb-4 fade-in">
+    <h1 class="h3 h2-md fw-bold text-gradient mb-2">
+      📈 Stock Prediction Service
     </h1>
-    <p class="lead text-white-50">
-      Enterprise-grade ML-powered stock price forecasting
+    <p class="small text-muted mb-0">
+      ML-powered stock price forecasting
     </p>
   </header>
 
-  <!-- Service Status Card -->
-  <div class="row justify-content-center mb-4">
-    <div class="col-lg-8">
-      <div class="card glass-effect slide-up" 
-           [ngClass]="{'border-success': isServiceOnline, 'border-danger': !isServiceOnline}"
-           role="status" 
-           [attr.aria-label]="'Service status: ' + (isServiceOnline ? 'Online' : 'Offline')">
-        <div class="card-body">
+  <!-- Service Status Card - Aligned with prediction results -->
+  <div class="row justify-content-center mb-3">
+    <div class="col-12 col-lg-10">
+      <div class="card border-0 shadow-sm" 
+           [ngClass]="{'border-success': isServiceOnline, 'border-danger': !isServiceOnline}">
+        <div class="card-body py-2 py-md-3">
           <div class="d-flex align-items-center justify-content-between flex-wrap">
-            <div class="d-flex align-items-center mb-2 mb-md-0">
+            <div class="d-flex align-items-center mb-1 mb-md-0">
               <span class="status-dot me-2" 
-                    [ngClass]="{'online': isServiceOnline, 'offline': !isServiceOnline}"
-                    [attr.aria-hidden]="true"></span>
-              <h5 class="mb-0" [ngClass]="{'status-online': isServiceOnline, 'status-offline': !isServiceOnline}">
+                    [ngClass]="{'online': isServiceOnline, 'offline': !isServiceOnline}"></span>
+              <h6 class="mb-0 small" [ngClass]="{'text-success': isServiceOnline, 'text-danger': !isServiceOnline}">
                 {{ isServiceOnline ? 'Service Online' : 'Service Offline' }}
-              </h5>
+              </h6>
             </div>
-            <div class="d-flex flex-wrap gap-3" *ngIf="serviceStats" role="complementary">
+            <div class="d-flex flex-wrap gap-2" *ngIf="serviceStats">
               <small class="text-muted">
-                <i class="bi bi-clock"></i> Uptime: {{ serviceStats.uptime }}
+                <i class="bi bi-clock"></i> {{ serviceStats.uptime }}
               </small>
               <small class="text-muted">
-                <i class="bi bi-speedometer2"></i> Cache: {{ serviceStats.cache_hit_rate }}%
-              </small>
-              <small class="text-muted">
-                <i class="bi bi-lightning"></i> Response: {{ serviceStats.average_response_time }}
+                <i class="bi bi-speedometer2"></i> {{ serviceStats.cache_hit_rate }}%
               </small>
             </div>
           </div>
@@ -44,64 +38,58 @@
     </div>
   </div>
 
-  <!-- Stock Input Section -->
-  <div class="row justify-content-center mb-4">
-    <div class="col-lg-8">
-      <div class="card slide-up">
-        <div class="card-body">
-          <h5 class="card-title mb-4">
+  <!-- Stock Input Section - Aligned with prediction results -->
+  <div class="row justify-content-center mb-3">
+    <div class="col-12 col-lg-10">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-3">
+          <h6 class="card-title mb-3">
             <i class="bi bi-search"></i> Stock Symbol Lookup
-          </h5>
+          </h6>
           
           <!-- Input Group -->
-          <div class="input-group mb-4">
+          <div class="input-group mb-3">
             <span class="input-group-text">
               <i class="bi bi-graph-up"></i>
             </span>
             <input 
               id="stockSymbol"
               type="text" 
-              class="form-control form-control-lg"
+              class="form-control"
               [(ngModel)]="stockSymbol" 
-              placeholder="Enter stock symbol (e.g., NVDA, TSLA, AAPL)"
+              placeholder="Enter symbol (e.g., NVDA, TSLA)"
               (keyup.enter)="getPrediction()"
               [disabled]="isLoading"
               autocomplete="off"
               autocapitalize="characters"
               spellcheck="false"
-              maxlength="10"
-              aria-describedby="stock-help">
+              maxlength="10">
             <button 
-              class="btn btn-primary btn-lg px-4"
+              class="btn btn-primary"
               type="button"
               (click)="getPrediction()" 
-              [disabled]="isLoading || !stockSymbol.trim()"
-              [attr.aria-label]="isLoading ? 'Predicting stock price' : 'Get stock prediction for ' + stockSymbol">
-              <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2" role="status"></span>
-              {{ isLoading ? 'Predicting...' : 'Get Prediction' }}
+              [disabled]="isLoading || !stockSymbol.trim()">
+              <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-1"></span>
+              {{ isLoading ? 'Loading...' : 'Predict' }}
             </button>
           </div>
           
-          <!-- Popular Stocks -->
-          <div class="mb-3" role="group" aria-label="Popular stock symbols">
-            <label class="form-label fw-semibold mb-2">Popular Stocks:</label>
-            <div class="d-flex flex-wrap gap-2">
-              <button 
-                *ngFor="let symbol of popularStocks; trackBy: trackBySymbol" 
-                type="button"
-                class="btn btn-outline-primary btn-sm"
-                [class.active]="stockSymbol === symbol"
-                (click)="selectStock(symbol)"
-                [disabled]="isLoading"
-                [attr.aria-label]="'Select ' + symbol + ' stock'"
-                [attr.aria-pressed]="stockSymbol === symbol">
-                {{ symbol }}
-              </button>
+          <!-- Popular Stocks - Expanded List with Scroll -->
+          <div class="mb-2">
+            <label class="form-label small fw-semibold mb-2">Popular Stocks:</label>
+            <div class="popular-stocks-container">
+              <div class="d-flex flex-wrap gap-1">
+                <button 
+                  *ngFor="let symbol of popularStocks; trackBy: trackBySymbol" 
+                  type="button"
+                  class="btn btn-outline-primary btn-sm"
+                  [class.active]="stockSymbol === symbol"
+                  (click)="selectStock(symbol)"
+                  [disabled]="isLoading">
+                  {{ symbol }}
+                </button>
+              </div>
             </div>
-          </div>
-          
-          <div id="stock-help" class="form-text">
-            Enter a valid US stock symbol to get ML-powered price predictions
           </div>
         </div>
       </div>
@@ -109,111 +97,113 @@
   </div>
 
   <!-- Loading Indicator -->
-  <div *ngIf="isLoading" class="row justify-content-center mb-4">
-    <div class="col-lg-6">
-      <div class="card text-center">
-        <div class="card-body py-5">
-          <div class="spinner-border-custom mb-3" role="status" 
-               [attr.aria-label]="'Loading prediction for ' + stockSymbol.toUpperCase()"></div>
-          <h5 class="mb-0">Analyzing {{ stockSymbol.toUpperCase() }} with ML models...</h5>
-          <p class="text-muted mb-0">This may take a few seconds</p>
+  <div *ngIf="isLoading" class="row justify-content-center mb-3">
+    <div class="col-12 col-md-8 col-lg-6">
+      <div class="card border-0 shadow-sm text-center">
+        <div class="card-body py-4">
+          <div class="spinner-border text-primary mb-2"></div>
+          <h6 class="mb-1">Analyzing {{ stockSymbol.toUpperCase() }}</h6>
+          <small class="text-muted">Processing with ML models...</small>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Error Alert -->
-  <div *ngIf="errorMessage" class="row justify-content-center mb-4">
-    <div class="col-lg-8">
+  <div *ngIf="errorMessage" class="row justify-content-center mb-3">
+    <div class="col-12 col-lg-10">
       <div class="alert alert-danger alert-dismissible fade show" role="alert">
         <i class="bi bi-exclamation-triangle-fill me-2"></i>
         <strong>Error:</strong> {{ errorMessage }}
-        <button type="button" class="btn-close" (click)="clearError()" aria-label="Close"></button>
+        <button type="button" class="btn-close" (click)="clearError()"></button>
       </div>
     </div>
   </div>
 
   <!-- Prediction Results -->
-  <div *ngIf="prediction && !isLoading" class="row justify-content-center mb-4">
-    <div class="col-lg-10">
-      <div class="card fade-in">
-        <div class="card-header bg-primary text-white">
+  <div *ngIf="prediction && !isLoading" class="row justify-content-center mb-3">
+    <div class="col-12 col-lg-10">
+      <div class="card border-0 shadow fade-in">
+        <div class="card-header bg-primary text-white py-2">
           <div class="d-flex justify-content-between align-items-center">
-            <h4 class="mb-0">
-              <i class="bi bi-graph-up-arrow me-2"></i>
+            <h6 class="mb-0">
+              <i class="bi bi-graph-up-arrow me-1"></i>
               {{ prediction.symbol }} Prediction
-            </h4>
-            <small class="opacity-75">
-              {{ formatTimestamp(prediction.timestamp) }}
+            </h6>
+            <small class="opacity-75 d-none d-md-block">
+              {{ formatTimestamp(prediction.prediction_time) }}
             </small>
           </div>
         </div>
         
-        <div class="card-body">
-          <!-- Price Information Row -->
-          <div class="row g-4 mb-4">
-            <div class="col-md-4">
-              <div class="text-center p-3 bg-light rounded">
-                <h6 class="text-muted mb-1">Current Price</h6>
-                <h3 class="mb-0 text-primary">${{ prediction.current_price.toFixed(2) }}</h3>
+        <div class="card-body p-3">
+          <!-- Price Information Row - Mobile Optimized -->
+          <div class="row g-2 g-md-3 mb-3">
+            <div class="col-4">
+              <div class="text-center p-2 p-md-3 bg-light rounded">
+                <div class="small text-muted mb-1">Current</div>
+                <div class="h6 h5-md mb-0 text-primary">${{ prediction.current_price.toFixed(2) }}</div>
               </div>
             </div>
-            <div class="col-md-4">
-              <div class="text-center p-3 bg-light rounded">
-                <h6 class="text-muted mb-1">Predicted Price</h6>
-                <h3 class="mb-0 text-info">${{ prediction.predicted_price.toFixed(2) }}</h3>
+            <div class="col-4">
+              <div class="text-center p-2 p-md-3 bg-light rounded">
+                <div class="small text-muted mb-1">Predicted</div>
+                <div class="h6 h5-md mb-0 text-info">${{ prediction.predicted_price.toFixed(2) }}</div>
               </div>
             </div>
-            <div class="col-md-4">
-              <div class="text-center p-3 bg-light rounded">
-                <h6 class="text-muted mb-1">Change</h6>
-                <h3 class="mb-0" [ngClass]="getPriceChangeClass(prediction.prediction_change)">
-                  {{ prediction.prediction_change > 0 ? '+' : '' }}${{ prediction.prediction_change.toFixed(2) }}
-                  <small class="d-block fs-6">
-                    ({{ prediction.prediction_change_percent.toFixed(2) }}%)
-                  </small>
-                </h3>
+            <div class="col-4">
+              <div class="text-center p-2 p-md-3 bg-light rounded">
+                <div class="small text-muted mb-1">Change</div>
+                <div class="h6 h5-md mb-0" [ngClass]="getPriceChangeClass(prediction.prediction_change!)">
+                  {{ prediction.prediction_change! > 0 ? '+' : '' }}${{ prediction.prediction_change!.toFixed(2) }}
+                  <div class="small">
+                    ({{ prediction.prediction_change_percent!.toFixed(1) }}%)
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- Metrics Row -->
-          <div class="row g-4 mb-4">
-            <div class="col-md-6">
-              <label class="form-label fw-semibold">Confidence Level</label>
-              <div class="progress mb-2" style="height: 25px;">
-                <div class="progress-bar" 
+          <!-- Metrics Row - Mobile Optimized -->
+          <div class="row g-2 g-md-3 mb-3">
+            <div class="col-12 col-md-7">
+              <label class="form-label small fw-semibold mb-1">Confidence Level</label>
+              <div class="progress" style="height: 20px;">
+                <div class="progress-bar bg-info" 
                      role="progressbar" 
                      [style.width.%]="prediction.confidence * 100"
-                     [attr.aria-valuenow]="prediction.confidence * 100"
-                     [attr.aria-valuemin]="0"
-                     [attr.aria-valuemax]="100">
-                  {{ (prediction.confidence * 100).toFixed(1) }}%
+                     [attr.aria-valuenow]="prediction.confidence * 100">
+                  <small class="fw-semibold">{{ (prediction.confidence * 100).toFixed(1) }}%</small>
                 </div>
               </div>
             </div>
-            <div class="col-md-6">
-              <label class="form-label fw-semibold">Recommendation</label>
+            <div class="col-12 col-md-5">
+              <label class="form-label small fw-semibold mb-1">Recommendation</label>
               <div>
-                <span class="badge fs-6 px-3 py-2" [ngClass]="getRecommendationClass(prediction.recommendation)">
-                  {{ prediction.recommendation.toUpperCase() }}
+                <span class="badge fs-6 px-3 py-2 w-100 text-center" [ngClass]="getRecommendationClass(prediction.trading_signal)">
+                  <i class="bi" [ngClass]="{
+                    'bi-arrow-up': prediction.trading_signal.toLowerCase() === 'buy',
+                    'bi-arrow-down': prediction.trading_signal.toLowerCase() === 'sell',
+                    'bi-dash': prediction.trading_signal.toLowerCase() === 'hold'
+                  }"></i>
+                  {{ prediction.trading_signal.toUpperCase() }}
                 </span>
               </div>
             </div>
           </div>
 
-          <!-- Metadata -->
-          <div class="row g-3">
-            <div class="col-md-6">
-              <small class="text-muted">
-                <i class="bi bi-database me-1"></i>
-                Data Source: {{ prediction.data_source }}
+          <!-- Metadata - Mobile Optimized -->
+          <div class="row g-2">
+            <div class="col-12 col-md-6">
+              <small class="text-muted d-block">
+                <i class="bi bi-cpu me-1"></i>
+                Model: {{ prediction.model_version }}
               </small>
             </div>
-            <div class="col-md-6">
-              <small class="text-muted">
-                <i class="bi bi-cpu me-1"></i>
-                Model Version: {{ prediction.model_version }}
+            <div class="col-12 col-md-6">
+              <small class="text-muted d-block d-md-none">
+                <i class="bi bi-clock me-1"></i>
+                {{ formatTimestamp(prediction.prediction_time) }}
               </small>
             </div>
           </div>
@@ -222,79 +212,80 @@
     </div>
   </div>
 
-  <!-- Historical Data Section -->
-  <div *ngIf="prediction && !isLoading" class="row justify-content-center mb-4">
-    <div class="col-lg-10">
-      <div class="card">
-        <div class="card-body">
+  <!-- Historical Data Section - Mobile Optimized -->
+  <div *ngIf="prediction && !isLoading" class="row justify-content-center mb-3">
+    <div class="col-12 col-lg-10">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-3">
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="card-title mb-0">
-              <i class="bi bi-clock-history me-2"></i>
+            <h6 class="card-title mb-0">
+              <i class="bi bi-clock-history me-1"></i>
               Historical Data
-            </h5>
+            </h6>
             <button 
-              class="btn btn-outline-secondary"
+              class="btn btn-outline-secondary btn-sm"
               type="button"
               (click)="toggleHistoricalData()" 
-              [disabled]="isLoadingHistorical"
-              [attr.aria-expanded]="showHistorical">
-              <span *ngIf="isLoadingHistorical" class="spinner-border spinner-border-sm me-2"></span>
-              {{ showHistorical ? 'Hide' : 'Show' }} Historical Data
+              [disabled]="isLoadingHistorical">
+              <span *ngIf="isLoadingHistorical" class="spinner-border spinner-border-sm me-1"></span>
+              {{ showHistorical ? 'Hide' : 'Show' }}
             </button>
           </div>
 
           <div *ngIf="showHistorical && historicalData" class="collapse show">
+            <!-- Mobile-friendly table -->
             <div class="table-responsive">
-              <table class="table table-hover">
+              <table class="table table-sm table-hover">
                 <thead class="table-dark">
                   <tr>
-                    <th scope="col">Date</th>
-                    <th scope="col">Open</th>
-                    <th scope="col">High</th>
-                    <th scope="col">Low</th>
-                    <th scope="col">Close</th>
-                    <th scope="col">Volume</th>
+                    <th class="small">Date</th>
+                    <th class="small">Open</th>
+                    <th class="small">High</th>
+                    <th class="small">Low</th>
+                    <th class="small">Close</th>
+                    <th class="small d-none d-md-table-cell">Volume</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr *ngFor="let item of historicalData.data.slice(0, 10); trackBy: trackByDate">
-                    <td>{{ formatDate(item.date) }}</td>
-                    <td>${{ item.open.toFixed(2) }}</td>
-                    <td class="text-success">${{ item.high.toFixed(2) }}</td>
-                    <td class="text-danger">${{ item.low.toFixed(2) }}</td>
-                    <td class="fw-semibold">${{ item.close.toFixed(2) }}</td>
-                    <td class="text-muted">{{ formatVolume(item.volume) }}</td>
+                    <td class="small">{{ formatDate(item.timestamp) }}</td>
+                    <td class="small">${{ item.open.toFixed(2) }}</td>
+                    <td class="small text-success">${{ item.high.toFixed(2) }}</td>
+                    <td class="small text-danger">${{ item.low.toFixed(2) }}</td>
+                    <td class="small fw-semibold">${{ item.close.toFixed(2) }}</td>
+                    <td class="small text-muted d-none d-md-table-cell">{{ formatVolume(item.volume) }}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
+            <small class="text-muted">Showing last {{ getMin(10, historicalData.data.length) }} trading days ({{ historicalData.count }} total records available)</small>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Action Buttons -->
+  <!-- Action Buttons - Mobile Optimized -->
   <div *ngIf="!isLoading" class="row justify-content-center">
-    <div class="col-lg-6">
+    <div class="col-12 col-md-8 col-lg-6">
       <div class="d-grid gap-2 d-md-flex justify-content-md-center">
         <button 
-          class="btn btn-outline-warning"
+          class="btn btn-outline-warning btn-sm"
           type="button"
           (click)="clearCache()" 
           [disabled]="isClearingCache">
-          <span *ngIf="isClearingCache" class="spinner-border spinner-border-sm me-2"></span>
+          <span *ngIf="isClearingCache" class="spinner-border spinner-border-sm me-1"></span>
           <i class="bi bi-trash me-1"></i>
           {{ isClearingCache ? 'Clearing...' : 'Clear Cache' }}
         </button>
         <button 
-          class="btn btn-outline-info"
+          class="btn btn-outline-info btn-sm"
           type="button"
           (click)="refreshStats()" 
           [disabled]="isRefreshingStats">
-          <span *ngIf="isRefreshingStats" class="spinner-border spinner-border-sm me-2"></span>
+          <span *ngIf="isRefreshingStats" class="spinner-border spinner-border-sm me-1"></span>
           <i class="bi bi-arrow-clockwise me-1"></i>
-          {{ isRefreshingStats ? 'Refreshing...' : 'Refresh Stats' }}
+          {{ isRefreshingStats ? 'Refreshing...' : 'Refresh' }}
         </button>
       </div>
     </div>

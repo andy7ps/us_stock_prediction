@@ -23,7 +23,7 @@ export class StockPredictionComponent implements OnInit {
   isServiceOnline: boolean = false;
   showHistorical: boolean = false;
 
-  popularStocks: string[] = ['NVDA', 'TSLA', 'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META', 'NFLX'];
+  popularStocks: string[] = ['NVDA', 'TSLA', 'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'AUR', 'PLTR', 'SMCI', 'TSM', 'MP', 'SMR', 'SPY', 'AMD', 'META', 'NOC', 'RTX', 'LMT'];
 
   constructor(private stockService: StockPredictionService) {}
 
@@ -38,7 +38,7 @@ export class StockPredictionComponent implements OnInit {
   }
 
   trackByDate(index: number, item: any): string {
-    return item.date;
+    return item.timestamp;
   }
 
   checkServiceHealth() {
@@ -75,11 +75,15 @@ export class StockPredictionComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
     this.prediction = null;
-    this.historicalData = null;
+    this.historicalData = null; // Clear historical data for fresh fetch
     this.showHistorical = false;
 
     this.stockService.getPrediction(this.stockSymbol).subscribe({
       next: (prediction) => {
+        // Compute missing fields for UI
+        prediction.prediction_change = prediction.predicted_price - prediction.current_price;
+        prediction.prediction_change_percent = (prediction.prediction_change / prediction.current_price) * 100;
+        
         this.prediction = prediction;
         this.isLoading = false;
       },
@@ -91,9 +95,11 @@ export class StockPredictionComponent implements OnInit {
   }
 
   toggleHistoricalData() {
-    if (!this.showHistorical && !this.historicalData) {
+    if (!this.showHistorical) {
+      // Always fetch fresh data when showing historical data
       this.isLoadingHistorical = true;
-      this.stockService.getHistoricalData(this.stockSymbol, 30).subscribe({
+      // Request last 10 days of data
+      this.stockService.getHistoricalData(this.stockSymbol, 10).subscribe({
         next: (data) => {
           this.historicalData = data;
           this.showHistorical = true;
@@ -105,7 +111,7 @@ export class StockPredictionComponent implements OnInit {
         }
       });
     } else {
-      this.showHistorical = !this.showHistorical;
+      this.showHistorical = false;
     }
   }
 
@@ -143,9 +149,10 @@ export class StockPredictionComponent implements OnInit {
 
   getRecommendationClass(recommendation: string): string {
     switch (recommendation.toLowerCase()) {
-      case 'buy': return 'badge bg-success recommendation-buy';
-      case 'sell': return 'badge bg-danger recommendation-sell';
-      default: return 'badge bg-warning recommendation-hold';
+      case 'buy': return 'bg-success';
+      case 'sell': return 'bg-danger';
+      case 'hold': return 'bg-warning text-dark';
+      default: return 'bg-secondary';
     }
   }
 
@@ -159,7 +166,12 @@ export class StockPredictionComponent implements OnInit {
   }
 
   formatDate(dateStr: string): string {
-    return new Date(dateStr).toLocaleDateString();
+    const date = new Date(dateStr);
+    // Ensure we get the correct date by using UTC methods to avoid timezone issues
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    return `${year}/${month}/${day}`;
   }
 
   formatVolume(volume: number): string {
@@ -169,6 +181,10 @@ export class StockPredictionComponent implements OnInit {
       return (volume / 1000).toFixed(1) + 'K';
     }
     return volume.toString();
+  }
+
+  getMin(a: number, b: number): number {
+    return Math.min(a, b);
   }
 
   private showToast(message: string, type: 'success' | 'error' | 'info' = 'info') {

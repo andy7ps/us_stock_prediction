@@ -8,27 +8,28 @@ export interface PredictionResponse {
   symbol: string;
   current_price: number;
   predicted_price: number;
-  prediction_change: number;
-  prediction_change_percent: number;
+  trading_signal: string; // Backend uses 'trading_signal' not 'recommendation'
   confidence: number;
-  recommendation: string;
-  timestamp: string;
-  data_source: string;
+  prediction_time: string; // Backend uses 'prediction_time' not 'timestamp'
   model_version: string;
+  // Computed fields for UI
+  prediction_change?: number;
+  prediction_change_percent?: number;
 }
 
 export interface HistoricalData {
   symbol: string;
+  count: number; // Backend includes count
+  days: number;  // Backend includes days
   data: Array<{
-    date: string;
+    symbol: string;
+    timestamp: string; // Backend uses 'timestamp' not 'date'
     open: number;
     high: number;
     low: number;
     close: number;
     volume: number;
   }>;
-  days: number;
-  timestamp: string;
 }
 
 export interface ServiceStats {
