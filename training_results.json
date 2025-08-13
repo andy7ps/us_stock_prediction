@@ -1,28 +1,76 @@
 {
-  "training_date": "2025-08-13T12:00:08.796363",
-  "models_trained": 2,
+  "training_date": "2025-08-13T13:57:07.951855",
+  "models_trained": 8,
   "results": [
     {
-      "symbol": "MSFT",
-      "mse": 29.759989525521537,
-      "mae": 4.554072545780089,
-      "mape": 0.8942845850420041,
-      "direction_accuracy": 37.5,
+      "symbol": "AMZN",
+      "mse": 20.78206334817215,
+      "mae": 2.9772099572482045,
+      "mape": 1.3553566399608175,
+      "direction_accuracy": 47.5,
       "predictions_count": 41
     },
     {
-      "symbol": "GOOGL",
-      "mse": 15.594511801196083,
-      "mae": 3.3905863694565475,
-      "mape": 1.8246354871169361,
-      "direction_accuracy": 65.0,
+      "symbol": "AUR",
+      "mse": 0.09914432839099391,
+      "mae": 0.26461438218015415,
+      "mape": 4.514011772195725,
+      "direction_accuracy": 50.0,
+      "predictions_count": 41
+    },
+    {
+      "symbol": "PLTR",
+      "mse": 30.570936923363423,
+      "mae": 3.8132905764651923,
+      "mape": 2.462145843870654,
+      "direction_accuracy": 45.0,
+      "predictions_count": 41
+    },
+    {
+      "symbol": "SMCI",
+      "mse": 10.024512958499487,
+      "mae": 2.3789146175462923,
+      "mape": 4.779951537814459,
+      "direction_accuracy": 42.5,
+      "predictions_count": 41
+    },
+    {
+      "symbol": "TSM",
+      "mse": 25.028081516048,
+      "mae": 3.7091509161440426,
+      "mape": 1.602474189847447,
+      "direction_accuracy": 45.0,
+      "predictions_count": 41
+    },
+    {
+      "symbol": "MP",
+      "mse": 42.21155887124356,
+      "mae": 5.389953572290417,
+      "mape": 10.09159353868469,
+      "direction_accuracy": 52.5,
+      "predictions_count": 41
+    },
+    {
+      "symbol": "SMR",
+      "mse": 9.141019430061236,
+      "mae": 2.4278095670041346,
+      "mape": 5.7595598385641,
+      "direction_accuracy": 62.5,
+      "predictions_count": 41
+    },
+    {
+      "symbol": "SPY",
+      "mse": 19.6518231527077,
+      "mae": 3.481529179946259,
+      "mape": 0.5618510710324628,
+      "direction_accuracy": 52.5,
       "predictions_count": 41
     }
   ],
   "average_metrics": {
-    "avg_mse": 22.67725066335881,
-    "avg_mae": 3.9723294576183186,
-    "avg_mape": 1.3594600360794702,
-    "avg_direction_accuracy": 51.25
+    "avg_mse": 19.68864256606082,
+    "avg_mae": 3.055309096103087,
+    "avg_mape": 3.8908680539962943,
+    "avg_direction_accuracy": 49.6875
   }
 }
