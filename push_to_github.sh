@@ -1,45 +1,70 @@
 #!/bin/bash
 
-echo "🚀 Pushing to GitHub: us_stock_prediction"
-echo "========================================"
+# GitHub Push Script
+# Run this after adding SSH key to GitHub
 
-REPO_URL="https://github.com/andy7ps/us_stock_prediction.git"
+set -e
 
-# Check if remote exists
-if git remote get-url origin >/dev/null 2>&1; then
-    echo "✅ Remote 'origin' already exists"
+echo "🚀 Pushing Stock Prediction ML Improvements to GitHub..."
+echo
+
+# Navigate to project directory
+cd /home/achen/andy_misc/golang/ml/stock_prediction/v3
+
+# Test SSH connection first
+echo "🔑 Testing SSH connection to GitHub..."
+if ssh -T git@github.com -o ConnectTimeout=10 2>&1 | grep -q "successfully authenticated"; then
+    echo "✅ SSH connection successful!"
 else
-    echo "🔗 Adding remote origin..."
-    git remote add origin $REPO_URL
-fi
-
-# Rename branch to main (GitHub standard)
-echo "🌿 Setting up main branch..."
-git branch -M main
-
-# Push main branch
-echo "📤 Pushing main branch..."
-if git push -u origin main; then
-    echo "✅ Successfully pushed main branch"
-else
-    echo "❌ Failed to push main branch"
-    echo "   Make sure you've created the repository on GitHub first"
+    echo "❌ SSH connection failed. Please add the SSH key to GitHub first."
+    echo
+    echo "SSH Public Key to add:"
+    echo "----------------------------------------"
+    cat ~/.ssh/id_ed25519.pub
+    echo "----------------------------------------"
+    echo
+    echo "Add this key at: https://github.com/settings/keys"
     exit 1
 fi
 
-# Push tags
-echo "🏷️  Pushing tags..."
-if git push origin --tags; then
-    echo "✅ Successfully pushed tags"
+# Show what will be pushed
+echo
+echo "📊 Commits ready to push:"
+git log --oneline -2
+
+echo
+echo "📁 Files to be pushed:"
+git show --name-only --pretty=format: HEAD | grep -v '^$' | head -10
+echo "... and more"
+
+echo
+echo "🚀 Pushing to GitHub..."
+
+# Push to GitHub
+if git push --set-upstream origin main; then
+    echo
+    echo "🎉 Successfully pushed to GitHub!"
+    echo
+    echo "✅ Repository updated with:"
+    echo "  - Automatic ML training system"
+    echo "  - Performance monitoring"
+    echo "  - 13 stock symbol support"
+    echo "  - Comprehensive documentation"
+    echo
+    echo "🔗 View at: https://github.com/andy7ps/us_stock_prediction"
 else
-    echo "⚠️  Warning: Failed to push tags (this is usually okay)"
+    echo
+    echo "❌ Push failed. Please check:"
+    echo "  1. SSH key is added to GitHub"
+    echo "  2. Repository permissions are correct"
+    echo "  3. Network connection is stable"
+    exit 1
 fi
 
-echo ""
-echo "🎉 Repository successfully pushed to GitHub!"
-echo "🔗 Repository URL: https://github.com/andy7ps/us_stock_prediction"
-echo "📋 You can now:"
-echo "   - View your repository: https://github.com/andy7ps/us_stock_prediction"
-echo "   - Clone it elsewhere: git clone $REPO_URL"
-echo "   - Share it with others"
-echo "   - Set up GitHub Actions for CI/CD"
+echo
+echo "🎯 Next steps:"
+echo "  1. Setup automatic training: ./setup_cron_jobs.sh"
+echo "  2. Train remaining symbols: ./manage_ml_models.sh train AMZN AUR PLTR SMCI TSM MP SMR SPY"
+echo "  3. Monitor system: ./dashboard.sh"
+echo
+echo "🚀 Your ML system is now on GitHub and ready for production!"
