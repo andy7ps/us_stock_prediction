@@ -33,7 +33,7 @@ func main() {
 
 	// Setup logger
 	logger := setupLogger(cfg)
-	logger.Info("Starting Stock Prediction Service v3.3.0")
+	logger.Info("Starting Stock Prediction Service v3.3.1")
 
 	// Initialize metrics
 	metricsCollector := metrics.NewMetrics()

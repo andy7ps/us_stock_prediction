@@ -51,11 +51,25 @@ export interface HealthStatus {
   providedIn: 'root'
 })
 export class StockPredictionService {
-  // Use environment-specific API URL
-  private readonly baseUrl = environment.apiUrl;
+  private readonly baseUrl: string;
 
   constructor(private http: HttpClient) {
+    // Dynamic API URL resolution based on current hostname
+    this.baseUrl = this.getApiUrl();
     console.log('StockPredictionService initialized with baseUrl:', this.baseUrl);
+  }
+
+  /**
+   * Get dynamic API URL based on current hostname
+   */
+  private getApiUrl(): string {
+    if (environment.apiUrl === 'dynamic') {
+      // Use current hostname with backend port
+      const hostname = window.location.hostname;
+      const protocol = window.location.protocol;
+      return `${protocol}//${hostname}:8081/api/v1`;
+    }
+    return environment.apiUrl;
   }
 
   /**
@@ -128,6 +142,7 @@ export class StockPredictionService {
     }
     
     console.error('StockPredictionService Error:', errorMessage);
+    console.error('API URL being used:', this.baseUrl);
     return throwError(() => new Error(errorMessage));
   }
 }

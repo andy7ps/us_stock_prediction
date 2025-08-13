@@ -42,13 +42,9 @@ case "$1" in
         log_message "Training models for symbols: $symbols"
         log_message "Using persistent data directory: $PERSISTENT_DATA_DIR"
         
-        # Activate virtual environment if it exists
-        if [ -d "venv" ]; then
-            source venv/bin/activate
-        fi
-        
-        # Train models with persistent data paths
-        python3 scripts/ml/train_model.py \
+        # Run training inside Docker container which has all dependencies
+        echo "Running training inside Docker container..."
+        docker exec v3_stock-prediction_1 python3 scripts/ml/simple_train.py \
             --symbols $symbols \
             --model-dir "$ML_MODELS_DIR" \
             --scalers-dir "$SCALERS_DIR" \

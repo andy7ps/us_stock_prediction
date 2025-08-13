@@ -1,4 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: '/api/v1'
+  // Use relative path for dynamic hostname resolution
+  apiUrl: 'dynamic' // Special flag to indicate dynamic resolution
 };

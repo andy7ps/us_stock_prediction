@@ -1,0 +1,144 @@
+version: '3.8'
+
+# Simplified Stock Prediction System - Frontend Focus
+# Removes strict health check dependencies that might be causing issues
+
+services:
+  # Angular Frontend with Bootstrap 5.3.3
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.working
+    ports:
+      - "8080:80"
+    environment:
+      - NGINX_HOST=localhost
+      - NGINX_PORT=80
+    volumes:
+      # Frontend logs to persistent storage
+      - ./persistent_data/frontend/logs:/var/log/nginx
+      - ./persistent_data/frontend/cache:/var/cache/nginx
+    depends_on:
+      - stock-prediction
+    restart: unless-stopped
+    networks:
+      - stock-prediction-network
+    labels:
+      - "com.docker.compose.service=frontend"
+      - "description=Bootstrap Angular Frontend with Persistent Logs"
+
+  # Go Backend API with ML Prediction Service
+  stock-prediction:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      # Server Configuration
+      - SERVER_PORT=8081
+      - SERVER_READ_TIMEOUT=10s
+      - SERVER_WRITE_TIMEOUT=10s
+      # Stock Configuration
+      - STOCK_SYMBOL=NVDA
+      - STOCK_LOOKBACK_DAYS=5
+      - STOCK_BUY_THRESHOLD=1.01
+      - STOCK_SELL_THRESHOLD=0.99
+      # ML Configuration
+      - ML_PYTHON_SCRIPT=scripts/ml/predict.py
+      - ML_MODEL_PATH=/app/persistent_data/ml_models/nvda_lstm_model
+      - ML_SCALER_PATH=/app/persistent_data/scalers/scaler.pkl
+      - ML_PREDICTION_TTL=5m
+      # Logging Configuration
+      - LOG_LEVEL=info
+      - LOG_FORMAT=json
+    volumes:
+      # Persistent data storage
+      - ./persistent_data:/app/persistent_data
+      # Configuration files
+      - ./persistent_data/config:/app/config
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - stock-prediction-network
+    labels:
+      - "com.docker.compose.service=stock-prediction"
+      - "description=Go Backend with ML Prediction Service"
+
+  # Redis Cache
+  redis:
+    image: redis:7.2-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      # Redis data persistence
+      - ./persistent_data/redis:/data
+      # Redis configuration
+      - ./persistent_data/config/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - stock-prediction-network
+    labels:
+      - "com.docker.compose.service=redis"
+      - "description=Redis Cache with Persistent Data"
+
+  # Prometheus Monitoring
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    ports:
+      - "9090:9090"
+    volumes:
+      # Prometheus configuration
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      # Prometheus data persistence
+      - ./persistent_data/prometheus:/prometheus
+      # Prometheus logs
+      - ./persistent_data/logs/prometheus:/var/log/prometheus
+    depends_on:
+      - stock-prediction
+    restart: unless-stopped
+    networks:
+      - stock-prediction-network
+    labels:
+      - "com.docker.compose.service=prometheus"
+      - "description=Prometheus Monitoring with Persistent Data"
+
+  # Grafana Dashboard
+  grafana:
+    image: grafana/grafana:10.1.0
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_PATHS_DATA=/var/lib/grafana
+      - GF_PATHS_LOGS=/var/log/grafana
+    volumes:
+      # Grafana data persistence
+      - ./persistent_data/grafana:/var/lib/grafana
+      # Grafana logs
+      - ./persistent_data/logs/grafana:/var/log/grafana
+      # Grafana configuration
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - stock-prediction-network
+    labels:
+      - "com.docker.compose.service=grafana"
+      - "description=Grafana Dashboard with Persistent Data"
+
+networks:
+  stock-prediction-network:
+    driver: bridge
+    labels:
+      - "com.docker.compose.network=stock-prediction"
+      - "description=Stock Prediction Service Network"

@@ -1,4 +1,4 @@
-# 📈 US Stock Prediction Service v3.3.0
+# 📈 US Stock Prediction Service v3.3.1
 
 [![Go Version](https://img.shields.io/badge/Go-1.23+-blue.svg)](https://golang.org)
 [![Python Version](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org)
@@ -6,7 +6,7 @@
 [![Bootstrap Version](https://img.shields.io/badge/Bootstrap-5.3.3-purple.svg)](https://getbootstrap.com)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://docker.com)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Release](https://img.shields.io/badge/Release-v3.3.0-brightgreen.svg)](https://github.com/andy7ps/us_stock_prediction/releases/tag/v3.3.0)
+[![Release](https://img.shields.io/badge/Release-v3.3.1-brightgreen.svg)](https://github.com/andy7ps/us_stock_prediction/releases/tag/v3.3.1)
 [![Production Ready](https://img.shields.io/badge/Production-Ready-success.svg)](#production-deployment)
 
 > **Full-stack enterprise-grade stock price prediction service with Bootstrap-enhanced Angular frontend, Go backend, persistent storage, advanced LSTM neural networks, ensemble ML intelligence, and comprehensive monitoring.**
@@ -37,9 +37,15 @@ cd us_stock_prediction
 ./deploy_docker_bootstrap.sh
 
 # 3. Access the application
-# Frontend: http://localhost:8080 (Bootstrap UI)
+# Frontend: http://localhost:8080 (Bootstrap UI) - Works with any IP!
 # Backend API: http://localhost:8081
 # Grafana: http://localhost:3000 (admin/admin)
+# 
+# 🌐 Dynamic Hostname Support:
+# Frontend automatically adapts to your access IP:
+# - http://localhost:8080 → Backend: http://localhost:8081
+# - http://192.168.1.100:8080 → Backend: http://192.168.1.100:8081
+# - http://[your-ip]:8080 → Backend: http://[your-ip]:8081
 ```
 
 **🎉 That's it! Your Bootstrap-enhanced stock prediction service is running!**
@@ -90,6 +96,12 @@ cd us_stock_prediction
 - **⚡ Real-time Updates**: Live stock predictions and market data
 - **📊 Data Visualization**: Interactive charts and confidence indicators
 - **🔄 Auto-refresh**: Automatic data updates and health monitoring
+
+### **🌐 Dynamic Hostname Support** *(New in v3.3.1)*
+- **Automatic Backend Discovery**: Frontend automatically detects and uses the correct backend URL
+- **Multi-IP Access**: Works seamlessly when accessed from different IP addresses
+- **Network Flexibility**: Perfect for Docker deployments, VMs, and cloud environments
+- **Zero Configuration**: No manual configuration needed for different network setups
 
 ### **User Experience**
 - **🎯 One-click Predictions**: Popular stock symbols with quick selection
@@ -259,16 +271,16 @@ GET /                                  # Service information
 
 ```bash
 # Get NVIDIA stock prediction
-curl http://localhost:8080/api/v1/predict/NVDA
+curl http://localhost:8081/api/v1/predict/NVDA
 
 # Get Tesla historical data (60 days)
-curl http://localhost:8080/api/v1/historical/TSLA?days=60
+curl http://localhost:8081/api/v1/historical/TSLA?days=60
 
 # Check service health
-curl http://localhost:8080/api/v1/health
+curl http://localhost:8081/api/v1/health
 
 # View service statistics
-curl http://localhost:8080/api/v1/stats
+curl http://localhost:8081/api/v1/stats
 ```
 
 ## 🛠️ **Installation**
@@ -293,7 +305,7 @@ cd us_stock_prediction
 docker-compose up -d
 
 # Verify installation
-curl http://localhost:8080/api/v1/health
+curl http://localhost:8081/api/v1/health
 ```
 
 ### **Method 2: Local Development**
