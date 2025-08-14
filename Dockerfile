@@ -28,13 +28,24 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python ML dependencies using pre-built wheels
+# Install ALL required Python ML dependencies
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir \
     numpy==1.24.3 \
     pandas==2.0.3 \
     scikit-learn==1.3.0 \
-    joblib==1.3.2
+    joblib==1.3.2 \
+    tensorflow==2.15.0 \
+    keras==2.15.0 \
+    yfinance==0.2.18 \
+    requests==2.31.0 \
+    xgboost==2.0.0 \
+    lightgbm==4.1.0 \
+    matplotlib==3.8.0 \
+    seaborn==0.13.0 \
+    plotly==5.17.0 \
+    numba==0.58.0 \
+    tqdm==4.66.0
 
 # Create app user
 RUN groupadd -g 1001 appgroup && \

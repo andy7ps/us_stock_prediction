@@ -1,0 +1,307 @@
+#!/bin/bash
+
+# ML Model Management Script - Persistent Data Edition
+# ALL operations use persistent_data/ directory structure
+
+set -e
+
+# PERSISTENT DATA PATHS - MANDATORY
+PERSISTENT_DATA_DIR="./persistent_data"
+ML_MODELS_DIR="$PERSISTENT_DATA_DIR/ml_models"
+ML_CACHE_DIR="$PERSISTENT_DATA_DIR/ml_cache"
+SCALERS_DIR="$PERSISTENT_DATA_DIR/scalers"
+STOCK_DATA_DIR="$PERSISTENT_DATA_DIR/stock_data"
+LOGS_DIR="$PERSISTENT_DATA_DIR/logs"
+CONFIG_DIR="$PERSISTENT_DATA_DIR/config"
+BACKUPS_DIR="$PERSISTENT_DATA_DIR/backups"
+
+# Ensure persistent data structure exists
+if [ ! -d "$PERSISTENT_DATA_DIR" ]; then
+    echo "🚨 ERROR: persistent_data directory not found!"
+    echo "Run: ./setup_persistent_data.sh"
+    exit 1
+fi
+
+# Create required directories
+mkdir -p "$ML_MODELS_DIR" "$ML_CACHE_DIR" "$SCALERS_DIR" "$STOCK_DATA_DIR" "$LOGS_DIR/training"
+
+# Default symbols list
+DEFAULT_SYMBOLS="NVDA TSLA AAPL MSFT GOOGL AMZN AUR PLTR SMCI TSM MP SMR SPY"
+
+# Logging function
+log_message() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOGS_DIR/training/manage_models.log"
+}
+
+case "$1" in
+    train)
+        symbols="${@:2}"
+        if [ -z "$symbols" ]; then
+            symbols="$DEFAULT_SYMBOLS"
+        fi
+        log_message "Training models for symbols: $symbols"
+        log_message "Using persistent data directory: $PERSISTENT_DATA_DIR"
+        
+        # Activate virtual environment if it exists
+        if [ -d "venv" ]; then
+            source venv/bin/activate
+        fi
+        
+        # Train models with persistent data paths
+        python3 scripts/ml/train_model.py \
+            --symbols $symbols \
+            --model-dir "$ML_MODELS_DIR" \
+            --scalers-dir "$SCALERS_DIR" \
+            --cache-dir "$ML_CACHE_DIR" \
+            --data-dir "$STOCK_DATA_DIR" \
+            --log-dir "$LOGS_DIR/training"
+        
+        log_message "Training completed for symbols: $symbols"
+        ;;
+        
+    quick-train)
+        symbol="${2:-NVDA}"
+        log_message "Quick training for symbol: $symbol (10 epochs)"
+        
+        if [ -d "venv" ]; then
+            source venv/bin/activate
+        fi
+        
+        python3 scripts/ml/train_model.py \
+            --symbols "$symbol" \
+            --model-dir "$ML_MODELS_DIR" \
+            --scalers-dir "$SCALERS_DIR" \
+            --cache-dir "$ML_CACHE_DIR" \
+            --data-dir "$STOCK_DATA_DIR" \
+            --log-dir "$LOGS_DIR/training" \
+            --epochs 10 \
+            --quick
+        
+        log_message "Quick training completed for symbol: $symbol"
+        ;;
+        
+    evaluate)
+        symbols="${@:2}"
+        if [ -z "$symbols" ]; then
+            symbols="$DEFAULT_SYMBOLS"
+        fi
+        log_message "Evaluating models for symbols: $symbols"
+        
+        if [ -d "venv" ]; then
+            source venv/bin/activate
+        fi
+        
+        python3 scripts/ml/evaluate_models.py \
+            --symbols $symbols \
+            --model-dir "$ML_MODELS_DIR" \
+            --scalers-dir "$SCALERS_DIR" \
+            --output-dir "$LOGS_DIR/evaluation" \
+            --data-dir "$STOCK_DATA_DIR"
+        ;;
+        
+    test)
+        log_message "Testing prediction with sample data..."
+        if [ -d "venv" ]; then
+            source venv/bin/activate
+        fi
+        
+        # Set environment variables for persistent data
+        export ML_MODEL_PATH="$ML_MODELS_DIR"
+        export SCALERS_PATH="$SCALERS_DIR"
+        export ML_CACHE_PATH="$ML_CACHE_DIR"
+        
+        python3 scripts/ml/ensemble_predict.py "100,101,102,103,104,105,106,107,108,109,110"
+        ;;
+        
+    test-symbol)
+        symbol="${2:-NVDA}"
+        log_message "Testing prediction for $symbol..."
+        curl -s "http://localhost:8081/api/v1/predict/$symbol" | jq . 2>/dev/null || curl -s "http://localhost:8081/api/v1/predict/$symbol"
+        ;;
+        
+    status)
+        echo "=== ML Model Status - Persistent Data ==="
+        echo "Persistent Data Directory: $PERSISTENT_DATA_DIR"
+        echo "Models Directory: $ML_MODELS_DIR"
+        echo ""
+        echo "📁 Directory Structure:"
+        ls -la "$PERSISTENT_DATA_DIR" 2>/dev/null || echo "Persistent data directory not accessible"
+        echo ""
+        echo "🧠 ML Models:"
+        ls -la "$ML_MODELS_DIR" 2>/dev/null || echo "No models found"
+        echo ""
+        echo "📊 Scalers:"
+        ls -la "$SCALERS_DIR" 2>/dev/null || echo "No scalers found"
+        echo ""
+        echo "🔄 Cache:"
+        ls -la "$ML_CACHE_DIR" 2>/dev/null || echo "No cache found"
+        echo ""
+        echo "⚙️ Configuration:"
+        if [ -f "$CONFIG_DIR/ml_config.json" ]; then
+            cat "$CONFIG_DIR/ml_config.json"
+        else
+            echo "No ML configuration found"
+        fi
+        echo ""
+        echo "=== Supported Symbols ==="
+        echo "$DEFAULT_SYMBOLS"
+        ;;
+        
+    performance)
+        log_message "Running performance monitoring..."
+        if [ -f "./monitor_performance.sh" ]; then
+            ./monitor_performance.sh
+        else
+            echo "Performance monitoring script not found"
+        fi
+        ;;
+        
+    backup)
+        log_message "Creating ML models backup..."
+        backup_file="$BACKUPS_DIR/ml_models_backup_$(date +%Y%m%d_%H%M%S).tar.gz"
+        tar -czf "$backup_file" -C "$PERSISTENT_DATA_DIR" ml_models scalers ml_cache
+        log_message "Backup created: $backup_file"
+        echo "✅ Backup created: $backup_file"
+        ;;
+        
+    restore)
+        backup_file="$2"
+        if [ -z "$backup_file" ]; then
+            echo "Usage: $0 restore <backup_file>"
+            echo "Available backups:"
+            ls -la "$BACKUPS_DIR"/*.tar.gz 2>/dev/null || echo "No backups found"
+            exit 1
+        fi
+        
+        log_message "Restoring ML models from: $backup_file"
+        tar -xzf "$backup_file" -C "$PERSISTENT_DATA_DIR"
+        log_message "Restore completed from: $backup_file"
+        echo "✅ Restore completed from: $backup_file"
+        ;;
+        
+    clean)
+        log_message "Cleaning old cache and temporary files..."
+        # Clean old cache files (older than 7 days)
+        find "$ML_CACHE_DIR" -name "*.cache" -mtime +7 -delete 2>/dev/null || true
+        # Clean old log files (older than 30 days)
+        find "$LOGS_DIR" -name "*.log" -mtime +30 -delete 2>/dev/null || true
+        log_message "Cleanup completed"
+        echo "✅ Cleanup completed"
+        ;;
+        
+    train-all)
+        log_message "Training all supported models..."
+        ./manage_ml_models.sh train $DEFAULT_SYMBOLS
+        ;;
+        
+    *)
+        echo "ML Model Management Script - Persistent Data Edition"
+        echo "Usage: $0 {train|quick-train|evaluate|test|test-symbol|status|performance|backup|restore|clean|train-all}"
+        echo ""
+        echo "Commands:"
+        echo "  train [symbols]     - Train models for specified symbols (default: all)"
+        echo "  quick-train [symbol] - Quick training with 10 epochs (default: NVDA)"
+        echo "  evaluate [symbols]  - Evaluate model performance"
+        echo "  test               - Test prediction with sample data"
+        echo "  test-symbol [symbol] - Test API prediction for symbol"
+        echo "  status             - Show model status and persistent data info"
+        echo "  performance        - Run performance monitoring"
+        echo "  backup             - Create backup of models and data"
+        echo "  restore <file>     - Restore from backup file"
+        echo "  clean              - Clean old cache and log files"
+        echo "  train-all          - Train all supported symbols"
+        echo ""
+        echo "Persistent Data Directory: $PERSISTENT_DATA_DIR"
+        echo "Supported Symbols: $DEFAULT_SYMBOLS"
+        echo ""
+        echo "🔥 IMPORTANT: All data is stored in persistent_data/ directory"
+        exit 1
+        ;;
+        echo "$DEFAULT_SYMBOLS"
+        echo ""
+        echo "=== Model Files ==="
+        for symbol in $DEFAULT_SYMBOLS; do
+            model_file="$ML_MODELS_DIR/${symbol,,}_lstm_model.h5"
+            if [ -f "$model_file" ]; then
+                size=$(ls -lh "$model_file" | awk '{print $5}')
+                date=$(ls -l "$model_file" | awk '{print $6, $7, $8}')
+                echo "✅ $symbol: $size ($date)"
+            else
+                echo "❌ $symbol: Not trained"
+            fi
+        done
+        ;;
+        
+    train-all)
+        log_message "Training all supported models..."
+        ./manage_ml_models.sh train $DEFAULT_SYMBOLS
+        ;;
+        
+    *)
+        echo "ML Model Management Script - Persistent Data Edition"
+        echo "Usage: $0 {train|quick-train|evaluate|test|test-symbol|status|performance|backup|restore|clean|train-all}"
+        echo ""
+        echo "Commands:"
+        echo "  train [symbols]     - Train models for specified symbols (default: all)"
+        echo "  quick-train [symbol] - Quick training with 10 epochs (default: NVDA)"
+        echo "  evaluate [symbols]  - Evaluate model performance"
+        echo "  test               - Test prediction with sample data"
+        echo "  test-symbol [symbol] - Test API prediction for symbol"
+        echo "  status             - Show model status and persistent data info"
+        echo "  performance        - Run performance monitoring"
+        echo "  backup             - Create backup of models and data"
+        echo "  restore <file>     - Restore from backup file"
+        echo "  clean              - Clean old cache and log files"
+        echo "  train-all          - Train all supported symbols"
+        echo ""
+        echo "Persistent Data Directory: $PERSISTENT_DATA_DIR"
+        echo "Supported Symbols: $DEFAULT_SYMBOLS"
+        echo ""
+        echo "🔥 IMPORTANT: All data is stored in persistent_data/ directory"
+        exit 1
+        ;;
+esac
+        ./monitor_performance.sh
+        ;;
+    auto-train)
+        echo "=== Automatic Training ==="
+        ./enhanced_training.sh "$@"
+        ;;
+    backup)
+        backup_dir="persistent_data/ml_models/backup_$(date +%Y%m%d_%H%M%S)"
+        echo "Backing up models to $backup_dir"
+        mkdir -p "$backup_dir"
+        cp persistent_data/ml_models/*.h5 persistent_data/ml_models/*.pkl "$backup_dir/" 2>/dev/null || true
+        echo "Backup completed"
+        ;;
+    clean)
+        echo "Cleaning old model files and logs..."
+        find persistent_data/ml_models -name "*.h5" -mtime +30 -delete 2>/dev/null || true
+        find logs -name "*.log" -mtime +7 -delete 2>/dev/null || true
+        echo "Cleanup completed"
+        ;;
+    *)
+        echo "Usage: $0 {train|evaluate|test|test-symbol|status|train-all|quick-train|performance|auto-train|backup|clean} [symbols...]"
+        echo
+        echo "Commands:"
+        echo "  train [symbols...]     Train models for specific symbols (default: all)"
+        echo "  evaluate [symbols...]  Evaluate models for specific symbols (default: all)"
+        echo "  test                   Test prediction with sample data"
+        echo "  test-symbol [symbol]   Test API prediction for specific symbol"
+        echo "  status                 Show model status and configuration"
+        echo "  train-all              Train models for all supported symbols"
+        echo "  quick-train [symbols]  Quick training with 10 epochs"
+        echo "  performance            Run performance monitoring"
+        echo "  auto-train [options]   Run automatic training with performance checks"
+        echo "  backup                 Backup current models"
+        echo "  clean                  Clean old model files and logs"
+        echo
+        echo "Supported symbols: $DEFAULT_SYMBOLS"
+        echo
+        echo "Examples:"
+        echo "  $0 train NVDA TSLA AAPL"
+        echo "  $0 evaluate MSFT GOOGL"
+        echo "  $0 test-symbol NVDA"
+        echo "  $0 auto-train --force"
+        ;;
+esac
