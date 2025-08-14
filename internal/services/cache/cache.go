@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"stock-prediction-v3/internal/metrics"
-	"stock-prediction-v3/internal/models"
+	"stock-prediction-us/internal/metrics"
+	"stock-prediction-us/internal/models"
 )
 
 // CacheEntry represents a cached prediction

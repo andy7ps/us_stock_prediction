@@ -14,9 +14,11 @@ services:
       - STOCK_SYMBOL=NVDA
       - ML_MODEL_PATH=/app/persistent_data/ml_models/nvda_lstm_model
       - STOCK_DATA_CACHE_PATH=/app/persistent_data/stock_data/cache
+      - PREDICTION_DB_PATH=/app/database/predictions.db
     volumes:
       - ./persistent_data:/app/persistent_data
       - ./scripts:/app/scripts:ro
+      - ./database_data:/app/database
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8081/api/v1/health"]

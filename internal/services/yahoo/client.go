@@ -12,9 +12,9 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/time/rate"
 
-	"stock-prediction-v3/internal/config"
-	"stock-prediction-v3/internal/metrics"
-	"stock-prediction-v3/internal/models"
+	"stock-prediction-us/internal/config"
+	"stock-prediction-us/internal/metrics"
+	"stock-prediction-us/internal/models"
 )
 
 // Client represents Yahoo Finance API client

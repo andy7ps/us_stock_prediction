@@ -51,8 +51,8 @@ RUN apk add --no-cache curl wget
 
 # Nginx user already exists in nginx:1.25-alpine, just ensure proper setup
 
-# Copy built application from build stage
-COPY --from=build /app/dist/frontend /usr/share/nginx/html
+# Copy built application from build stage (browser subdirectory for Angular 17+)
+COPY --from=build /app/dist/frontend/browser /usr/share/nginx/html
 
 # Copy custom nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf

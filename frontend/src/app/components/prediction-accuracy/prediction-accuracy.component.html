@@ -1,0 +1,307 @@
+<div class="container-fluid py-4">
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h2 class="card-title mb-3">
+            <i class="bi bi-graph-up-arrow text-primary me-2"></i>
+            Prediction Accuracy Tracking
+          </h2>
+          <p class="card-text text-muted">
+            Monitor and analyze the accuracy of daily stock predictions with comprehensive performance metrics.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Daily Status Card -->
+  <div class="row mb-4" *ngIf="dailyStatus">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-light">
+          <h5 class="mb-0">
+            <i class="bi bi-calendar-check text-info me-2"></i>
+            Daily Prediction Status
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-3">
+              <div class="text-center">
+                <div class="h4 mb-1" [class]="dailyStatus.last_execution_status === 'completed' ? 'text-success' : 'text-warning'">
+                  {{ dailyStatus.last_execution_status | titlecase }}
+                </div>
+                <small class="text-muted">Last Execution</small>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="text-center">
+                <div class="h4 mb-1 text-primary">{{ dailyStatus.successful_symbols }}</div>
+                <small class="text-muted">Successful Predictions</small>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="text-center">
+                <div class="h4 mb-1 text-danger">{{ dailyStatus.failed_symbols }}</div>
+                <small class="text-muted">Failed Predictions</small>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="text-center">
+                <button 
+                  class="btn btn-primary btn-sm"
+                  (click)="executeDailyPredictions()"
+                  [disabled]="loading">
+                  <i class="bi bi-play-circle me-1"></i>
+                  Run Now
+                </button>
+                <small class="d-block text-muted mt-1">Manual Execution</small>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row mt-3" *ngIf="dailyStatus.last_execution_date">
+            <div class="col-12">
+              <small class="text-muted">
+                <i class="bi bi-clock me-1"></i>
+                Last run: {{ formatDateTime(dailyStatus.last_execution_date) }}
+                <span *ngIf="dailyStatus.execution_duration"> 
+                  ({{ dailyStatus.execution_duration }}ms)
+                </span>
+              </small>
+            </div>
+          </div>
+          
+          <div class="row mt-2" *ngIf="dailyStatus.error_message">
+            <div class="col-12">
+              <div class="alert alert-warning alert-sm mb-0">
+                <i class="bi bi-exclamation-triangle me-1"></i>
+                {{ dailyStatus.error_message }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overall Performance Summary -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            <i class="bi bi-bar-chart text-success me-2"></i>
+            Performance Summary by Symbol
+          </h5>
+          <button 
+            class="btn btn-outline-primary btn-sm"
+            (click)="loadOverallPerformance()"
+            [disabled]="loading">
+            <i class="bi bi-arrow-clockwise me-1"></i>
+            Refresh
+          </button>
+        </div>
+        <div class="card-body">
+          <div *ngIf="loading" class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+
+          <div *ngIf="error" class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            {{ error }}
+          </div>
+
+          <div *ngIf="!loading && !error && accuracySummaries.length === 0" class="text-center py-4 text-muted">
+            <i class="bi bi-inbox display-4 d-block mb-3"></i>
+            No prediction data available yet. Run daily predictions to see accuracy metrics.
+          </div>
+
+          <div *ngIf="!loading && !error && accuracySummaries.length > 0" class="table-responsive">
+            <table class="table table-hover">
+              <thead class="table-light">
+                <tr>
+                  <th>Symbol</th>
+                  <th>Total Predictions</th>
+                  <th>With Actual Data</th>
+                  <th>Avg Price Accuracy (MAPE)</th>
+                  <th>Direction Accuracy</th>
+                  <th>Avg Confidence</th>
+                  <th>Best/Worst Accuracy</th>
+                  <th>Last Prediction</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let summary of accuracySummaries">
+                  <td>
+                    <span class="badge bg-primary">{{ summary.symbol }}</span>
+                  </td>
+                  <td>{{ summary.total_predictions }}</td>
+                  <td>
+                    {{ summary.predictions_with_actual }}
+                    <small class="text-muted">
+                      ({{ formatPercentage(summary.predictions_with_actual / summary.total_predictions * 100) }})
+                    </small>
+                  </td>
+                  <td>
+                    <span [class]="getAccuracyColor(summary.average_accuracy_mape)">
+                      {{ formatNumber(summary.average_accuracy_mape) }}%
+                    </span>
+                  </td>
+                  <td>
+                    <span [class]="getDirectionAccuracyColor(summary.direction_accuracy)">
+                      {{ formatPercentage(summary.direction_accuracy) }}
+                    </span>
+                  </td>
+                  <td>{{ formatPercentage(summary.average_confidence * 100) }}</td>
+                  <td>
+                    <small>
+                      <span class="text-success">{{ formatNumber(summary.best_accuracy) }}%</span>
+                      /
+                      <span class="text-danger">{{ formatNumber(summary.worst_accuracy) }}%</span>
+                    </small>
+                  </td>
+                  <td>{{ formatDate(summary.last_prediction_date) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Historical Data Analysis -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-light">
+          <h5 class="mb-0">
+            <i class="bi bi-clock-history text-warning me-2"></i>
+            Historical Prediction Analysis
+          </h5>
+        </div>
+        <div class="card-body">
+          <!-- Filters -->
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label for="symbolSelect" class="form-label">Symbol</label>
+              <select 
+                id="symbolSelect"
+                class="form-select"
+                [(ngModel)]="selectedSymbol">
+                <option value="">Select a symbol</option>
+                <option *ngFor="let symbol of symbols" [value]="symbol">{{ symbol }}</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label for="startDate" class="form-label">Start Date</label>
+              <input 
+                type="date" 
+                id="startDate"
+                class="form-control"
+                [(ngModel)]="startDate">
+            </div>
+            <div class="col-md-3">
+              <label for="endDate" class="form-label">End Date</label>
+              <input 
+                type="date" 
+                id="endDate"
+                class="form-control"
+                [(ngModel)]="endDate">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label">&nbsp;</label>
+              <button 
+                class="btn btn-primary d-block w-100"
+                (click)="loadPredictionHistory()"
+                [disabled]="loading">
+                <i class="bi bi-search me-1"></i>
+                Search
+              </button>
+            </div>
+          </div>
+
+          <!-- Historical Data Table -->
+          <div *ngIf="predictionHistory.length > 0" class="table-responsive">
+            <table class="table table-sm table-hover">
+              <thead class="table-light">
+                <tr>
+                  <th>Date</th>
+                  <th>Predicted Price</th>
+                  <th>Actual Price</th>
+                  <th>Accuracy (MAPE)</th>
+                  <th>Direction</th>
+                  <th>Confidence</th>
+                  <th>Market Open</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let prediction of predictionHistory">
+                  <td>{{ formatDate(prediction.prediction_date) }}</td>
+                  <td>
+                    <span *ngIf="prediction.predicted_price; else noPredictedPrice">
+                      ${{ formatNumber(prediction.predicted_price) }}
+                    </span>
+                    <ng-template #noPredictedPrice>
+                      <span class="text-muted">N/A</span>
+                    </ng-template>
+                  </td>
+                  <td>
+                    <span *ngIf="prediction.actual_close; else noActualPrice">
+                      ${{ formatNumber(prediction.actual_close) }}
+                    </span>
+                    <ng-template #noActualPrice>
+                      <span class="text-muted">Pending</span>
+                    </ng-template>
+                  </td>
+                  <td>
+                    <span *ngIf="prediction.accuracy_mape !== undefined; else noAccuracy" 
+                          [class]="getAccuracyColor(prediction.accuracy_mape!)">
+                      {{ formatNumber(prediction.accuracy_mape!) }}%
+                    </span>
+                    <ng-template #noAccuracy>
+                      <span class="text-muted">N/A</span>
+                    </ng-template>
+                  </td>
+                  <td>
+                    <span *ngIf="prediction.predicted_direction">
+                      {{ getDirectionIcon(prediction.predicted_direction) }}
+                      <span [class]="getDirectionClass(prediction.direction_correct)">
+                        {{ prediction.predicted_direction | titlecase }}
+                      </span>
+                      <i *ngIf="prediction.direction_correct === true" class="bi bi-check-circle text-success ms-1"></i>
+                      <i *ngIf="prediction.direction_correct === false" class="bi bi-x-circle text-danger ms-1"></i>
+                    </span>
+                    <span *ngIf="!prediction.predicted_direction" class="text-muted">N/A</span>
+                  </td>
+                  <td>
+                    <span *ngIf="prediction.confidence">
+                      {{ formatPercentage(prediction.confidence * 100) }}
+                    </span>
+                    <span *ngIf="!prediction.confidence" class="text-muted">N/A</span>
+                  </td>
+                  <td>
+                    <span [class]="prediction.market_was_open ? 'text-success' : 'text-warning'">
+                      <i [class]="prediction.market_was_open ? 'bi bi-check-circle' : 'bi bi-x-circle'"></i>
+                      {{ prediction.market_was_open ? 'Open' : 'Closed' }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div *ngIf="predictionHistory.length === 0 && selectedSymbol && !loading" class="text-center py-4 text-muted">
+            <i class="bi bi-search display-4 d-block mb-3"></i>
+            No prediction history found for the selected criteria.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

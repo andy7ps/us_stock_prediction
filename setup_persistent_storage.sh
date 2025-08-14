@@ -53,6 +53,9 @@ ML_MODEL_PATH=/app/persistent_data/ml_models/nvda_lstm_model
 ML_SCALER_PATH=/app/persistent_data/scalers/scaler.pkl
 ML_CACHE_PATH=/app/persistent_data/ml_cache
 
+# Database Path (New in v3.4.0)
+PREDICTION_DB_PATH=/app/database/predictions.db
+
 # Stock Data Paths
 STOCK_DATA_CACHE_PATH=/app/persistent_data/stock_data/cache
 STOCK_HISTORICAL_PATH=/app/persistent_data/stock_data/historical

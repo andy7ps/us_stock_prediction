@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"stock-prediction-v3/internal/config"
-	"stock-prediction-v3/internal/metrics"
-	"stock-prediction-v3/internal/models"
-	"stock-prediction-v3/internal/services/cache"
+	"stock-prediction-us/internal/config"
+	"stock-prediction-us/internal/metrics"
+	"stock-prediction-us/internal/models"
+	"stock-prediction-us/internal/services/cache"
 
 	"github.com/sirupsen/logrus"
 )

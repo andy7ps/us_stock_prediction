@@ -61,6 +61,7 @@ services:
       - STOCK_DATA_CACHE_PATH=/app/persistent_data/stock_data/cache
       - ML_CACHE_PATH=/app/persistent_data/ml_cache
       - SCALERS_PATH=/app/persistent_data/scalers
+      - PREDICTION_DB_PATH=/app/database/predictions.db
       
       # Cache Configuration
       - REDIS_URL=redis://redis:6379
@@ -76,9 +77,9 @@ services:
     volumes:
       # CRITICAL: Mount entire persistent_data directory
       - ./persistent_data:/app/persistent_data
-      # Mount scripts and models as read-only
+      # Mount scripts as read-only and database volume
       - ./scripts:/app/scripts:ro
-      - ./models:/app/models:ro
+      - ./database_data:/app/database
       # Application logs
       - ./persistent_data/logs:/app/logs
       # Configuration files

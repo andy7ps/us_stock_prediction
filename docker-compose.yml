@@ -49,12 +49,15 @@ services:
       - ML_MODEL_PATH=/app/persistent_data/ml_models/nvda_lstm_model
       - ML_SCALER_PATH=/app/persistent_data/scalers/scaler.pkl
       - ML_PREDICTION_TTL=5m
+      - PREDICTION_DB_PATH=/app/database/predictions.db
       # Logging Configuration
       - LOG_LEVEL=info
       - LOG_FORMAT=json
     volumes:
       # Persistent data storage
       - ./persistent_data:/app/persistent_data
+      # Database storage
+      - ./database_data:/app/database
       # Configuration files
       - ./persistent_data/config:/app/config
     depends_on:

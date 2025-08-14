@@ -356,10 +356,23 @@ STOCK_LOOKBACK_DAYS=5
 STOCK_BUY_THRESHOLD=1.01
 STOCK_SELL_THRESHOLD=0.99
 
-# ML Configuration
+# ML Configuration (Updated to use persistent_data)
 ML_PYTHON_SCRIPT=scripts/ml/predict.py
-ML_MODEL_PATH=models/nvda_lstm_model
+ML_MODEL_PATH=persistent_data/ml_models/nvda_lstm_model
+ML_SCALER_PATH=persistent_data/scalers/scaler.pkl
 ML_PREDICTION_TTL=5m
+
+# Database Configuration (New in v3.4.0)
+PREDICTION_DB_PATH=database_data/predictions.db
+
+# ML Configuration (Updated to use persistent_data)
+ML_PYTHON_SCRIPT=scripts/ml/predict.py
+ML_MODEL_PATH=persistent_data/ml_models/nvda_lstm_model
+ML_SCALER_PATH=persistent_data/scalers/scaler.pkl
+ML_PREDICTION_TTL=5m
+
+# Database Configuration (New in v3.4.0)
+PREDICTION_DB_PATH=database_data/predictions.db
 
 # Persistent Storage (New in v3.1)
 ML_MODEL_PATH=/app/persistent_data/ml_models/nvda_lstm_model
@@ -385,11 +398,15 @@ The v3.1 release introduces **complete persistent storage** ensuring zero data l
 persistent_data/
 ├── ml_models/              # ML model files and weights
 ├── ml_cache/               # Cached ML predictions
+├── scalers/                # Data preprocessing scalers
 ├── stock_data/             # Stock market data storage
 ├── logs/                   # Application logs
 ├── config/                 # Runtime configuration
 ├── backups/                # Automated data backups
 └── monitoring/             # Prometheus and Grafana data
+
+database_data/              # SQLite database (New in v3.4.0)
+└── predictions.db          # Daily prediction tracking database
 ```
 
 ### **One-Command Setup**

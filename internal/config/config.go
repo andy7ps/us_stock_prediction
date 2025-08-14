@@ -75,8 +75,8 @@ func Load() (*Config, error) {
 	config.API.BaseURL = getEnvString("API_BASE_URL", "https://query1.finance.yahoo.com")
 
 	config.ML.PythonScript = getEnvString("ML_PYTHON_SCRIPT", "scripts/ml/predict.py")
-	config.ML.ModelPath = getEnvString("ML_MODEL_PATH", "models/nvda_lstm_model")
-	config.ML.ScalerPath = getEnvString("ML_SCALER_PATH", "models/scaler.pkl")
+	config.ML.ModelPath = getEnvString("ML_MODEL_PATH", "persistent_data/ml_models/nvda_lstm_model")
+	config.ML.ScalerPath = getEnvString("ML_SCALER_PATH", "persistent_data/scalers/scaler.pkl")
 	config.ML.PredictionTTL = getEnvDuration("ML_PREDICTION_TTL", 5*time.Minute)
 	config.ML.Model = getEnvString("ML_MODEL", "simple")
 	config.ML.UseOHLCVData = getEnvBool("ML_USE_OHLCV_DATA", false)

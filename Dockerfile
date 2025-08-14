@@ -57,19 +57,19 @@ WORKDIR /app
 # Copy binary from builder stage
 COPY --from=builder /app/main .
 
+# Copy internal directory structure for migrations
+COPY --chown=appuser:appgroup internal/ ./internal/
+
 # Copy Python scripts (read-only, no persistence needed)
 COPY --chown=appuser:appgroup scripts/ ./scripts/
 
 # Create persistent data directory structure
-RUN mkdir -p /app/persistent_data/{ml_models,ml_cache,scalers,stock_data/{historical,cache,predictions},logs,config,backups,monitoring/{prometheus,grafana}} && \
+RUN mkdir -p /app/persistent_data/{ml_models,ml_cache,scalers,stock_data/{historical,cache,predictions},logs,config,backups,database,monitoring/{prometheus,grafana}} && \
     chown -R appuser:appgroup /app/persistent_data
 
-# Create traditional directories and link to persistent storage
-RUN mkdir -p /app/models /app/logs /app/config && \
-    chown -R appuser:appgroup /app/models /app/logs /app/config
-
-# Copy default models and config if they exist (will be overridden by volumes)
-COPY --chown=appuser:appgroup models/ ./models/
+# Create traditional directories (removed models dependency)
+RUN mkdir -p /app/logs /app/config && \
+    chown -R appuser:appgroup /app/logs /app/config
 
 # Create data initialization script
 RUN echo '#!/bin/bash\n\
@@ -77,17 +77,11 @@ RUN echo '#!/bin/bash\n\
 echo "🔄 Initializing persistent data directories..."\n\
 \n\
 # Create directories if they dont exist\n\
-mkdir -p /app/persistent_data/{ml_models,ml_cache,scalers,stock_data/{historical,cache,predictions},logs,config,backups}\n\
+mkdir -p /app/persistent_data/{ml_models,ml_cache,scalers,stock_data/{historical,cache,predictions},logs,config,backups,database}\n\
 \n\
-# Copy default models if persistent directory is empty\n\
-if [ ! "$(ls -A /app/persistent_data/ml_models 2>/dev/null)" ] && [ -d /app/models ]; then\n\
-    echo "📦 Copying default models to persistent storage..."\n\
-    cp -r /app/models/* /app/persistent_data/ml_models/ 2>/dev/null || true\n\
-fi\n\
-\n\
-# Set proper permissions\n\
-chown -R appuser:appgroup /app/persistent_data\n\
-chmod -R 755 /app/persistent_data\n\
+# Set proper permissions (skip prometheus files to avoid permission errors)\n\
+chown -R appuser:appgroup /app/persistent_data/ml_models /app/persistent_data/ml_cache /app/persistent_data/scalers /app/persistent_data/stock_data /app/persistent_data/logs /app/persistent_data/config /app/persistent_data/backups /app/persistent_data/database 2>/dev/null || true\n\
+chmod -R 755 /app/persistent_data/ml_models /app/persistent_data/ml_cache /app/persistent_data/scalers /app/persistent_data/stock_data /app/persistent_data/logs /app/persistent_data/config /app/persistent_data/backups /app/persistent_data/database 2>/dev/null || true\n\
 \n\
 echo "✅ Persistent data initialization completed"\n\
 ' > /app/init_data.sh && chmod +x /app/init_data.sh

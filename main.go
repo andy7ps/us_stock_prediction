@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"runtime"
 	"syscall"
 	"time"
@@ -15,12 +16,14 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 
-	"stock-prediction-v3/internal/config"
-	"stock-prediction-v3/internal/handlers"
-	"stock-prediction-v3/internal/metrics"
-	"stock-prediction-v3/internal/services/cache"
-	"stock-prediction-v3/internal/services/prediction"
-	"stock-prediction-v3/internal/services/yahoo"
+	"stock-prediction-us/internal/config"
+	"stock-prediction-us/internal/database"
+	"stock-prediction-us/internal/handlers"
+	"stock-prediction-us/internal/metrics"
+	"stock-prediction-us/internal/services"
+	"stock-prediction-us/internal/services/cache"
+	"stock-prediction-us/internal/services/prediction"
+	"stock-prediction-us/internal/services/yahoo"
 )
 
 func main() {
@@ -33,21 +36,49 @@ func main() {
 
 	// Setup logger
 	logger := setupLogger(cfg)
-	logger.Info("Starting Stock Prediction Service v3.3.1")
+	logger.Info("Starting Stock Prediction Service v3.4.0")
 
 	// Initialize metrics
 	metricsCollector := metrics.NewMetrics()
+
+	// Initialize database
+	dbPath := getDBPath()
+	
+	// Ensure database directory exists
+	dbDir := filepath.Dir(dbPath)
+	if err := os.MkdirAll(dbDir, 0755); err != nil {
+		logger.WithError(err).Fatal("Failed to create database directory")
+	}
+	
+	db, err := database.NewSQLiteDB(dbPath)
+	if err != nil {
+		logger.WithError(err).Fatal("Failed to initialize database")
+	}
+	defer db.Close()
+
+	logger.WithField("db_path", dbPath).Info("Database initialized successfully")
 
 	// Initialize services
 	yahooClient := yahoo.NewClient(cfg, logger, metricsCollector)
 	predictionCache := cache.NewPredictionCache(cfg.ML.PredictionTTL, metricsCollector)
 	predictionService := prediction.NewService(cfg, logger, metricsCollector, predictionCache)
 
+	// Initialize new prediction tracking services
+	marketCalendarService := services.NewMarketCalendarService(db.GetDB())
+	predictionTrackerService := services.NewPredictionTrackerService(db.GetDB(), marketCalendarService, predictionService)
+	accuracyCalculatorService := services.NewAccuracyCalculatorService(db.GetDB())
+
+	// Initialize market calendar for current year
+	if err := marketCalendarService.InitializeCurrentYear(); err != nil {
+		logger.WithError(err).Warn("Failed to initialize market calendar")
+	}
+
 	// Initialize handlers
 	handler := handlers.NewHandler(cfg, logger, metricsCollector, yahooClient, predictionService)
+	predictionTrackingHandler := handlers.NewPredictionTrackingHandler(predictionTrackerService, accuracyCalculatorService)
 
 	// Setup router
-	router := setupRouter(handler)
+	router := setupRouter(handler, predictionTrackingHandler)
 
 	// Create HTTP server
 	server := &http.Server{
@@ -87,6 +118,16 @@ func main() {
 	}
 }
 
+func getDBPath() string {
+	// Check for environment variable first
+	if dbPath := os.Getenv("PREDICTION_DB_PATH"); dbPath != "" {
+		return dbPath
+	}
+
+	// Use dedicated database volume directory
+	return "./database/predictions.db"
+}
+
 func setupLogger(cfg *config.Config) *logrus.Logger {
 	logger := logrus.New()
 
@@ -112,7 +153,7 @@ func setupLogger(cfg *config.Config) *logrus.Logger {
 	return logger
 }
 
-func setupRouter(handler *handlers.Handler) *mux.Router {
+func setupRouter(handler *handlers.Handler, predictionTrackingHandler *handlers.PredictionTrackingHandler) *mux.Router {
 	router := mux.NewRouter()
 
 	// Add middleware
@@ -122,7 +163,7 @@ func setupRouter(handler *handlers.Handler) *mux.Router {
 	// API routes
 	api := router.PathPrefix("/api/v1").Subrouter()
 	
-	// Prediction endpoints
+	// Original prediction endpoints
 	api.HandleFunc("/predict/{symbol}", handler.PredictHandler).Methods("GET")
 	api.HandleFunc("/historical/{symbol}", handler.HistoricalDataHandler).Methods("GET")
 	
@@ -131,6 +172,9 @@ func setupRouter(handler *handlers.Handler) *mux.Router {
 	api.HandleFunc("/stats", handler.StatsHandler).Methods("GET")
 	api.HandleFunc("/cache/clear", handler.ClearCacheHandler).Methods("POST")
 
+	// Register new prediction tracking routes
+	predictionTrackingHandler.RegisterRoutes(router)
+
 	// Metrics endpoint for Prometheus
 	router.Handle("/metrics", promhttp.Handler())
 
@@ -138,16 +182,34 @@ func setupRouter(handler *handlers.Handler) *mux.Router {
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		response := map[string]interface{}{
 			"service": "Stock Prediction API",
-			"version": "v3.3.0",
+			"version": "v3.4.0",
 			"status":  "running",
 			"time":    time.Now().Format(time.RFC3339),
-			"endpoints": map[string]string{
-				"predict":     "/api/v1/predict/{symbol}",
-				"historical":  "/api/v1/historical/{symbol}",
-				"health":      "/api/v1/health",
-				"stats":       "/api/v1/stats",
-				"clear_cache": "/api/v1/cache/clear",
-				"metrics":     "/metrics",
+			"features": []string{
+				"Real-time predictions",
+				"Historical data",
+				"Daily prediction tracking",
+				"Accuracy analysis",
+				"Performance metrics",
+			},
+			"endpoints": map[string]interface{}{
+				"predictions": map[string]string{
+					"predict":     "/api/v1/predict/{symbol}",
+					"historical":  "/api/v1/historical/{symbol}",
+				},
+				"tracking": map[string]string{
+					"daily_run":        "/api/v1/predictions/daily-run",
+					"daily_status":     "/api/v1/predictions/daily-status",
+					"accuracy_summary": "/api/v1/predictions/accuracy/{symbol}",
+					"performance":      "/api/v1/predictions/performance",
+					"history":          "/api/v1/predictions/history/{symbol}",
+				},
+				"management": map[string]string{
+					"health":      "/api/v1/health",
+					"stats":       "/api/v1/stats",
+					"clear_cache": "/api/v1/cache/clear",
+					"metrics":     "/metrics",
+				},
 			},
 		}
 		

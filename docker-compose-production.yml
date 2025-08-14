@@ -54,6 +54,7 @@ services:
       - ML_MODEL_PATH=/app/persistent_data/ml_models/nvda_lstm_model
       - ML_PREDICTION_TTL=5m
       - STOCK_DATA_CACHE_PATH=/app/persistent_data/stock_data/cache
+      - PREDICTION_DB_PATH=/app/database/predictions.db
       
       # Cache Configuration
       - REDIS_URL=redis://redis:6379
@@ -70,7 +71,7 @@ services:
     volumes:
       - persistent_data:/app/persistent_data
       - ./scripts:/app/scripts:ro
-      - ./models:/app/models:ro
+      - database_data:/app/database
     depends_on:
       redis:
         condition: service_healthy
@@ -208,6 +209,8 @@ networks:
 # Persistent Volumes
 volumes:
   persistent_data:
+    driver: local
+  database_data:
     driver: local
     driver_opts:
       type: none
