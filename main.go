@@ -160,17 +160,20 @@ func setupRouter(handler *handlers.Handler, predictionTrackingHandler *handlers.
 	router.Use(handler.LoggingMiddleware)
 	router.Use(handler.CORSMiddleware)
 
+	// Add catch-all OPTIONS handler for CORS preflight
+	router.PathPrefix("/").HandlerFunc(handler.OptionsHandler).Methods("OPTIONS")
+
 	// API routes
 	api := router.PathPrefix("/api/v1").Subrouter()
 	
 	// Original prediction endpoints
-	api.HandleFunc("/predict/{symbol}", handler.PredictHandler).Methods("GET")
-	api.HandleFunc("/historical/{symbol}", handler.HistoricalDataHandler).Methods("GET")
+	api.HandleFunc("/predict/{symbol}", handler.PredictHandler).Methods("GET", "OPTIONS")
+	api.HandleFunc("/historical/{symbol}", handler.HistoricalDataHandler).Methods("GET", "OPTIONS")
 	
 	// Management endpoints
-	api.HandleFunc("/health", handler.HealthHandler).Methods("GET")
-	api.HandleFunc("/stats", handler.StatsHandler).Methods("GET")
-	api.HandleFunc("/cache/clear", handler.ClearCacheHandler).Methods("POST")
+	api.HandleFunc("/health", handler.HealthHandler).Methods("GET", "OPTIONS")
+	api.HandleFunc("/stats", handler.StatsHandler).Methods("GET", "OPTIONS")
+	api.HandleFunc("/cache/clear", handler.ClearCacheHandler).Methods("POST", "OPTIONS")
 
 	// Register new prediction tracking routes
 	predictionTrackingHandler.RegisterRoutes(router)

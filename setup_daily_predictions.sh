@@ -61,7 +61,7 @@ add_cron_job() {
 # Runs at 9:00 AM Taipei time (1:00 AM UTC)
 PATH=/usr/local/bin:/usr/bin:/bin
 API_BASE_URL=http://localhost:8081
-DAILY_PREDICTION_SYMBOLS=NVDA,TSLA,AAPL,MSFT,GOOGL,AMZN,AUR,PLTR,SMCI,TSM,MP,SMR,SPY
+DAILY_PREDICTION_SYMBOLS=NVDA,TSLA,AAPL,MSFT,GOOGL,AMZN,AUR,PLTR,SMCI,TSM,MP,SMR,SPY,META,NOC,RTX,LMT
 $CRON_TIME cd $PROJECT_ROOT && $script_path >> $log_path 2>&1
 EOF
     
@@ -113,7 +113,7 @@ show_usage() {
    - Cron Schedule: $CRON_TIME
    - Local Time: 1:00 AM UTC (9:00 AM Taipei)
    - Frequency: Daily
-   - Symbols: NVDA, TSLA, AAPL, MSFT, GOOGL, AMZN, AUR, PLTR, SMCI, TSM, MP, SMR, SPY
+   - Symbols: NVDA, TSLA, AAPL, MSFT, GOOGL, AMZN, AUR, PLTR, SMCI, TSM, MP, SMR, SPY, META, NOC, RTX, LMT
 
 📁 File Locations:
    - Script: $PROJECT_ROOT/scripts/daily_prediction.sh

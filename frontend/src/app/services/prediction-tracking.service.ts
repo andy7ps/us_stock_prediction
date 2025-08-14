@@ -89,13 +89,45 @@ export interface UpdateActualPriceRequest {
   providedIn: 'root'
 })
 export class PredictionTrackingService {
-  private baseUrl: string;
+  private readonly baseUrl: string;
 
   constructor(private http: HttpClient) {
-    // Get the current hostname and port for dynamic API URL
-    const hostname = window.location.hostname;
-    const port = hostname === 'localhost' ? '8081' : '8081'; // Adjust port as needed
-    this.baseUrl = `http://${hostname}:${port}/api/v1`;
+    // Dynamic API URL resolution based on current hostname (same as StockPredictionService)
+    this.baseUrl = this.getApiUrl();
+    console.log('PredictionTrackingService initialized with baseUrl:', this.baseUrl);
+  }
+
+  /**
+   * Get dynamic API URL based on current hostname
+   */
+  private getApiUrl(): string {
+    if (environment.apiUrl === 'dynamic') {
+      // Use current hostname with backend port
+      const hostname = window.location.hostname;
+      const protocol = window.location.protocol;
+      return `${protocol}//${hostname}:8081/api/v1`;
+    }
+    return environment.apiUrl;
+  }
+
+  // Accuracy tracking endpoints
+  getAccuracySummary(symbol?: string): Observable<PredictionAccuracySummary> {
+    const url = symbol 
+      ? `${this.baseUrl}/predictions/accuracy/${symbol}`
+      : `${this.baseUrl}/predictions/accuracy/summary`;
+    return this.http.get<PredictionAccuracySummary>(url);
+  }
+
+  getPerformanceMetrics(): Observable<PredictionPerformanceMetrics> {
+    return this.http.get<PredictionPerformanceMetrics>(`${this.baseUrl}/predictions/performance`);
+  }
+
+  getPredictionHistory(symbol: string, startDate?: string, endDate?: string): Observable<PredictionTracking[]> {
+    let params = new HttpParams();
+    if (startDate) params = params.set('start_date', startDate);
+    if (endDate) params = params.set('end_date', endDate);
+    
+    return this.http.get<PredictionTracking[]>(`${this.baseUrl}/predictions/history/${symbol}`, { params });
   }
 
   // Daily prediction endpoints
@@ -108,138 +140,29 @@ export class PredictionTrackingService {
     return this.http.get<DailyPredictionStatus>(`${this.baseUrl}/predictions/daily-status`);
   }
 
-  // Accuracy tracking endpoints
-  getAccuracySummary(symbol: string): Observable<PredictionAccuracySummary> {
-    return this.http.get<PredictionAccuracySummary>(`${this.baseUrl}/predictions/accuracy/${symbol}`);
+  // Data management endpoints
+  updateActualPrice(request: UpdateActualPriceRequest): Observable<any> {
+    return this.http.post(`${this.baseUrl}/predictions/update-actual`, request);
   }
 
-  getOverallPerformance(): Observable<PredictionPerformanceMetrics> {
-    return this.http.get<PredictionPerformanceMetrics>(`${this.baseUrl}/predictions/accuracy/summary`);
-  }
-
-  getAccuracyRange(startDate: string, endDate: string, symbols?: string[]): Observable<PredictionTracking[]> {
+  // Utility methods for date range queries
+  getAccuracyRange(startDate: string, endDate: string, symbol?: string): Observable<PredictionAccuracySummary[]> {
     let params = new HttpParams()
       .set('start_date', startDate)
       .set('end_date', endDate);
-
-    if (symbols && symbols.length > 0) {
-      params = params.set('symbols', JSON.stringify(symbols));
-    }
-
-    return this.http.get<PredictionTracking[]>(`${this.baseUrl}/predictions/accuracy/range`, { params });
+    
+    if (symbol) params = params.set('symbol', symbol);
+    
+    return this.http.get<PredictionAccuracySummary[]>(`${this.baseUrl}/predictions/accuracy/range`, { params });
   }
 
-  // Historical data endpoints
-  getPredictionHistory(
-    symbol: string,
-    startDate?: string,
-    endDate?: string,
-    limit?: number,
-    offset?: number
-  ): Observable<PredictionTracking[]> {
-    let params = new HttpParams();
-
-    if (startDate) params = params.set('start_date', startDate);
-    if (endDate) params = params.set('end_date', endDate);
-    if (limit) params = params.set('limit', limit.toString());
-    if (offset) params = params.set('offset', offset.toString());
-
-    return this.http.get<PredictionTracking[]>(`${this.baseUrl}/predictions/history/${symbol}`, { params });
+  getTrendAnalysis(symbol: string, days: number = 30): Observable<any> {
+    const params = new HttpParams().set('days', days.toString());
+    return this.http.get(`${this.baseUrl}/predictions/trends/${symbol}`, { params });
   }
 
-  getAllPredictionHistory(
-    startDate?: string,
-    endDate?: string,
-    limit?: number,
-    offset?: number
-  ): Observable<PredictionTracking[]> {
-    let params = new HttpParams();
-
-    if (startDate) params = params.set('start_date', startDate);
-    if (endDate) params = params.set('end_date', endDate);
-    if (limit) params = params.set('limit', limit.toString());
-    if (offset) params = params.set('offset', offset.toString());
-
-    return this.http.get<PredictionTracking[]>(`${this.baseUrl}/predictions/history`, { params });
-  }
-
-  updateActualPrice(request: UpdateActualPriceRequest): Observable<{ status: string }> {
-    return this.http.post<{ status: string }>(`${this.baseUrl}/predictions/update-actual`, request);
-  }
-
-  getPerformanceMetrics(): Observable<PredictionPerformanceMetrics> {
-    return this.http.get<PredictionPerformanceMetrics>(`${this.baseUrl}/predictions/performance`);
-  }
-
-  // Trends and analytics
-  getAccuracyTrends(symbol: string, days?: number): Observable<any> {
-    let params = new HttpParams();
-    if (days) params = params.set('days', days.toString());
-
-    return this.http.get<any>(`${this.baseUrl}/predictions/trends/${symbol}`, { params });
-  }
-
-  getTopPerformers(limit?: number): Observable<PredictionAccuracySummary[]> {
-    let params = new HttpParams();
-    if (limit) params = params.set('limit', limit.toString());
-
+  getTopPerformers(limit: number = 10): Observable<PredictionAccuracySummary[]> {
+    const params = new HttpParams().set('limit', limit.toString());
     return this.http.get<PredictionAccuracySummary[]>(`${this.baseUrl}/predictions/top-performers`, { params });
-  }
-
-  // Utility methods
-  formatAccuracy(accuracy?: number): string {
-    if (accuracy === undefined || accuracy === null) return 'N/A';
-    return `${accuracy.toFixed(2)}%`;
-  }
-
-  formatPercentage(value?: number): string {
-    if (value === undefined || value === null) return 'N/A';
-    return `${(value * 100).toFixed(1)}%`;
-  }
-
-  formatCurrency(value?: number): string {
-    if (value === undefined || value === null) return 'N/A';
-    return `$${value.toFixed(2)}`;
-  }
-
-  formatDate(dateString?: string): string {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString();
-  }
-
-  formatDateTime(dateString?: string): string {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleString();
-  }
-
-  getAccuracyColor(accuracy: number): string {
-    if (accuracy <= 2) return 'success';
-    if (accuracy <= 5) return 'warning';
-    return 'danger';
-  }
-
-  getDirectionAccuracyColor(accuracy: number): string {
-    if (accuracy >= 70) return 'success';
-    if (accuracy >= 50) return 'warning';
-    return 'danger';
-  }
-
-  getStatusColor(status: string): string {
-    switch (status.toLowerCase()) {
-      case 'completed': return 'success';
-      case 'running': return 'info';
-      case 'failed': return 'danger';
-      case 'pending': return 'warning';
-      default: return 'secondary';
-    }
-  }
-
-  getDirectionIcon(direction?: string): string {
-    switch (direction) {
-      case 'up': return '↗️';
-      case 'down': return '↘️';
-      case 'hold': return '➡️';
-      default: return '❓';
-    }
   }
 }

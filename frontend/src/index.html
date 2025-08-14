@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>US Stock Prediction Service</title>
+  <title>US Stock Prediction Service - Mantis Dashboard</title>
   <base href="/">
   
   <!-- Mobile-first responsive viewport -->
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=yes, minimum-scale=1, maximum-scale=5">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   
   <!-- PWA and Mobile App Support -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -14,53 +14,238 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Stock Prediction">
   <meta name="application-name" content="Stock Prediction">
-  <meta name="msapplication-TileColor" content="#667eea">
-  <meta name="theme-color" content="#667eea">
+  <meta name="msapplication-TileColor" content="#4680ff">
+  <meta name="theme-color" content="#4680ff">
   
   <!-- SEO and Social Media -->
-  <meta name="description" content="Enterprise-grade ML-powered stock price prediction service with real-time data and advanced analytics">
-  <meta name="keywords" content="stock prediction, machine learning, financial analysis, stock market, AI">
+  <meta name="description" content="Enterprise-grade ML-powered stock price prediction service with Mantis Bootstrap theme">
+  <meta name="keywords" content="stock prediction, machine learning, financial analysis, stock market, AI, mantis bootstrap">
   <meta name="author" content="US Stock Prediction Service">
-  
-  <!-- Open Graph / Facebook -->
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="/">
-  <meta property="og:title" content="US Stock Prediction Service">
-  <meta property="og:description" content="Enterprise-grade ML-powered stock price prediction service">
-  <meta property="og:image" content="/assets/og-image.png">
-  
-  <!-- Twitter -->
-  <meta property="twitter:card" content="summary_large_image">
-  <meta property="twitter:url" content="/">
-  <meta property="twitter:title" content="US Stock Prediction Service">
-  <meta property="twitter:description" content="Enterprise-grade ML-powered stock price prediction service">
-  <meta property="twitter:image" content="/assets/twitter-image.png">
   
   <!-- Favicon -->
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   
-  <!-- PWA Manifest -->
-  <link rel="manifest" href="/manifest.json">
+  <!-- Mantis Bootstrap Theme Assets -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/tabler-icons@1.119.0/icons-sprite.svg" rel="preload" as="image">
   
-  <!-- Apple Touch Icons -->
-  <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
-  
-  <!-- Preconnect to external domains for performance -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  
-  <!-- Prevent FOUC (Flash of Unstyled Content) -->
+  <!-- Mantis Theme Colors and Variables -->
   <style>
-    body { 
-      margin: 0; 
-      padding: 0; 
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    :root {
+      /* Mantis Primary Colors */
+      --bs-primary: #4680ff;
+      --bs-primary-rgb: 70, 128, 255;
+      --bs-secondary: #6c757d;
+      --bs-success: #04a9f5;
+      --bs-info: #2196f3;
+      --bs-warning: #ffc107;
+      --bs-danger: #dc2626;
+      --bs-light: #f8f9fa;
+      --bs-dark: #212529;
+      
+      /* Mantis Extended Colors */
+      --mantis-primary: #4680ff;
+      --mantis-secondary: #04a9f5;
+      --mantis-success: #2ca87f;
+      --mantis-info: #2196f3;
+      --mantis-warning: #e58a00;
+      --mantis-danger: #dc2626;
+      --mantis-dark: #212529;
+      --mantis-light: #f8f9fa;
+      
+      /* Sidebar Colors */
+      --mantis-sidebar-bg: #ffffff;
+      --mantis-sidebar-border: #e5e7eb;
+      --mantis-sidebar-text: #6b7280;
+      --mantis-sidebar-active: #4680ff;
+      
+      /* Card Colors */
+      --mantis-card-bg: #ffffff;
+      --mantis-card-border: #e5e7eb;
+      --mantis-card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+      
+      /* Typography */
+      --mantis-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --mantis-font-size-base: 0.875rem;
+      --mantis-line-height-base: 1.5;
+      
+      /* Spacing */
+      --mantis-sidebar-width: 260px;
+      --mantis-header-height: 70px;
     }
     
-    /* Loading spinner for initial load */
+    /* Base Styles */
+    * {
+      box-sizing: border-box;
+    }
+    
+    html, body { 
+      margin: 0; 
+      padding: 0; 
+      background-color: #f8fafc;
+      font-family: var(--mantis-font-family);
+      font-size: var(--mantis-font-size-base);
+      line-height: var(--mantis-line-height-base);
+      color: #374151;
+      height: 100%;
+    }
+    
+    /* Mantis Layout Styles */
+    .pc-container {
+      display: flex;
+      min-height: 100vh;
+      background-color: #f8fafc;
+    }
+    
+    .pc-sidebar {
+      width: var(--mantis-sidebar-width);
+      background-color: var(--mantis-sidebar-bg);
+      border-right: 1px solid var(--mantis-sidebar-border);
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      overflow-y: auto;
+      z-index: 1000;
+      transition: all 0.3s ease;
+    }
+    
+    .pc-content {
+      flex: 1;
+      margin-left: var(--mantis-sidebar-width);
+      min-height: 100vh;
+      background-color: #f8fafc;
+    }
+    
+    .pc-header {
+      height: var(--mantis-header-height);
+      background-color: #ffffff;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      padding: 0 1.5rem;
+      position: sticky;
+      top: 0;
+      z-index: 999;
+    }
+    
+    .pc-main {
+      padding: 1.5rem;
+    }
+    
+    /* Sidebar Brand */
+    .navbar-brand {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--mantis-sidebar-border);
+      display: flex;
+      align-items: center;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--mantis-dark);
+      text-decoration: none;
+    }
+    
+    .navbar-brand i {
+      margin-right: 0.75rem;
+      color: var(--mantis-primary);
+      font-size: 1.5rem;
+    }
+    
+    /* Navigation */
+    .pc-navbar {
+      padding: 1rem 0;
+    }
+    
+    .pc-navbar .nav {
+      padding: 0 1rem;
+    }
+    
+    .pc-navbar .nav-item {
+      margin-bottom: 0.25rem;
+    }
+    
+    .pc-navbar .nav-link {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      color: var(--mantis-sidebar-text);
+      text-decoration: none;
+      border-radius: 0.5rem;
+      transition: all 0.2s ease;
+      font-weight: 500;
+    }
+    
+    .pc-navbar .nav-link:hover {
+      background-color: #f3f4f6;
+      color: var(--mantis-primary);
+    }
+    
+    .pc-navbar .nav-link.active {
+      background-color: #eff6ff;
+      color: var(--mantis-primary);
+      border-left: 3px solid var(--mantis-primary);
+    }
+    
+    .pc-navbar .nav-link i {
+      margin-right: 0.75rem;
+      width: 1.25rem;
+      text-align: center;
+    }
+    
+    /* Cards */
+    .card {
+      background-color: var(--mantis-card-bg);
+      border: 1px solid var(--mantis-card-border);
+      border-radius: 0.75rem;
+      box-shadow: var(--mantis-card-shadow);
+      margin-bottom: 1.5rem;
+    }
+    
+    .card-header {
+      background-color: transparent;
+      border-bottom: 1px solid var(--mantis-card-border);
+      padding: 1.25rem 1.5rem;
+      font-weight: 600;
+      color: var(--mantis-dark);
+    }
+    
+    .card-body {
+      padding: 1.5rem;
+    }
+    
+    /* Buttons */
+    .btn-primary {
+      background-color: var(--mantis-primary);
+      border-color: var(--mantis-primary);
+      color: #ffffff;
+      font-weight: 500;
+      border-radius: 0.5rem;
+      padding: 0.625rem 1.25rem;
+      transition: all 0.2s ease;
+    }
+    
+    .btn-primary:hover {
+      background-color: #3b6fff;
+      border-color: #3b6fff;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(70, 128, 255, 0.3);
+    }
+    
+    .btn-outline-primary {
+      color: var(--mantis-primary);
+      border-color: var(--mantis-primary);
+      background-color: transparent;
+    }
+    
+    .btn-outline-primary:hover {
+      background-color: var(--mantis-primary);
+      border-color: var(--mantis-primary);
+      color: #ffffff;
+    }
+    
+    /* Loading spinner */
     .initial-loader {
       position: fixed;
       top: 50%;
@@ -68,8 +253,8 @@
       transform: translate(-50%, -50%);
       width: 40px;
       height: 40px;
-      border: 4px solid rgba(255,255,255,0.3);
-      border-top: 4px solid white;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid var(--mantis-primary);
       border-radius: 50%;
       animation: spin 1s linear infinite;
       z-index: 9999;
@@ -84,13 +269,83 @@
     app-root:not(:empty) + .initial-loader {
       display: none;
     }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .pc-sidebar {
+        transform: translateX(-100%);
+      }
+      
+      .pc-sidebar.show {
+        transform: translateX(0);
+      }
+      
+      .pc-content {
+        margin-left: 0;
+      }
+    }
+    
+    /* Utility Classes */
+    .text-primary { color: var(--mantis-primary) !important; }
+    .text-secondary { color: var(--mantis-secondary) !important; }
+    .text-success { color: var(--mantis-success) !important; }
+    .text-danger { color: var(--mantis-danger) !important; }
+    .text-warning { color: var(--mantis-warning) !important; }
+    .text-info { color: var(--mantis-info) !important; }
+    
+    .bg-primary { background-color: var(--mantis-primary) !important; }
+    .bg-secondary { background-color: var(--mantis-secondary) !important; }
+    .bg-success { background-color: var(--mantis-success) !important; }
+    .bg-danger { background-color: var(--mantis-danger) !important; }
+    .bg-warning { background-color: var(--mantis-warning) !important; }
+    .bg-info { background-color: var(--mantis-info) !important; }
+    
+    /* Stock Prediction Specific Styles */
+    .prediction-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+    }
+    
+    .accuracy-card {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+      border: none;
+    }
+    
+    .analytics-card {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: white;
+      border: none;
+    }
+    
+    .metric-card {
+      text-align: center;
+      padding: 2rem 1rem;
+    }
+    
+    .metric-value {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    
+    .metric-label {
+      font-size: 0.875rem;
+      opacity: 0.8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
   </style>
 </head>
 <body>
   <app-root></app-root>
   
   <!-- Initial loading indicator -->
-  <div class="initial-loader" aria-label="Loading application"></div>
+  <div class="initial-loader" aria-label="Loading Stock Prediction Dashboard"></div>
+  
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   
   <!-- Service Worker Registration -->
   <script>
@@ -112,8 +367,19 @@
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      // Show install button or banner
       console.log('App can be installed');
+    });
+    
+    // Mobile sidebar toggle
+    document.addEventListener('DOMContentLoaded', function() {
+      const sidebarToggle = document.querySelector('[data-bs-toggle="sidebar"]');
+      const sidebar = document.querySelector('.pc-sidebar');
+      
+      if (sidebarToggle && sidebar) {
+        sidebarToggle.addEventListener('click', function() {
+          sidebar.classList.toggle('show');
+        });
+      }
     });
   </script>
 </body>

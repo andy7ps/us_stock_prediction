@@ -311,13 +311,33 @@ func (h *Handler) LoggingMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// CORSMiddleware handles CORS headers
+// CORSMiddleware handles CORS headers with comprehensive support
 func (h *Handler) CORSMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		// Allow all origins for development and dynamic hostname support
+		origin := r.Header.Get("Origin")
+		if origin != "" {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+		} else {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		}
 		
+		// Allow credentials for authenticated requests
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+		
+		// Allow common HTTP methods
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")
+		
+		// Allow common headers including those used by Angular HttpClient
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, X-Requested-With, Origin")
+		
+		// Allow exposure of custom headers
+		w.Header().Set("Access-Control-Expose-Headers", "Content-Length, Content-Type")
+		
+		// Set max age for preflight requests
+		w.Header().Set("Access-Control-Max-Age", "86400") // 24 hours
+		
+		// Handle preflight OPTIONS requests for ALL paths
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)
 			return
@@ -325,6 +345,25 @@ func (h *Handler) CORSMiddleware(next http.Handler) http.Handler {
 		
 		next.ServeHTTP(w, r)
 	})
+}
+
+// OptionsHandler handles all OPTIONS requests globally
+func (h *Handler) OptionsHandler(w http.ResponseWriter, r *http.Request) {
+	// Set CORS headers
+	origin := r.Header.Get("Origin")
+	if origin != "" {
+		w.Header().Set("Access-Control-Allow-Origin", origin)
+	} else {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+	}
+	
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, X-Requested-With, Origin")
+	w.Header().Set("Access-Control-Expose-Headers", "Content-Length, Content-Type")
+	w.Header().Set("Access-Control-Max-Age", "86400")
+	
+	w.WriteHeader(http.StatusOK)
 }
 
 // responseWriter wraps http.ResponseWriter to capture status code

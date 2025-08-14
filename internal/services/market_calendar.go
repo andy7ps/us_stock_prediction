@@ -133,9 +133,18 @@ func (s *MarketCalendarService) GetMarketCalendar(startDate, endDate time.Time) 
 			return nil, fmt.Errorf("failed to scan market calendar row: %v", err)
 		}
 		
+		// Try parsing as date first, then as timestamp if that fails
 		cal.Date, err = time.Parse("2006-01-02", dateStr)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse date: %v", err)
+			// Try parsing as timestamp format
+			cal.Date, err = time.Parse("2006-01-02T15:04:05Z", dateStr)
+			if err != nil {
+				// Try parsing as timestamp with milliseconds
+				cal.Date, err = time.Parse("2006-01-02T15:04:05.000Z", dateStr)
+				if err != nil {
+					return nil, fmt.Errorf("failed to parse date '%s': %v", dateStr, err)
+				}
+			}
 		}
 		
 		if holidayName.Valid {

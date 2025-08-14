@@ -88,9 +88,18 @@ func (s *PredictionTrackerService) GetPrediction(symbol string, date time.Time) 
 		return nil, fmt.Errorf("failed to get prediction: %v", err)
 	}
 
+	// Try parsing as date first, then as timestamp if that fails
 	p.PredictionDate, err = time.Parse("2006-01-02", predictionDateStr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse prediction date: %v", err)
+		// Try parsing as timestamp format
+		p.PredictionDate, err = time.Parse("2006-01-02T15:04:05Z", predictionDateStr)
+		if err != nil {
+			// Try parsing as timestamp with milliseconds
+			p.PredictionDate, err = time.Parse("2006-01-02T15:04:05.000Z", predictionDateStr)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse prediction date '%s': %v", predictionDateStr, err)
+			}
+		}
 	}
 
 	if actualPriceTimestamp.Valid {
@@ -379,9 +388,18 @@ func (s *PredictionTrackerService) GetPredictionHistory(query models.PredictionH
 			return nil, fmt.Errorf("failed to scan prediction row: %v", err)
 		}
 
+		// Try parsing as date first, then as timestamp if that fails
 		p.PredictionDate, err = time.Parse("2006-01-02", predictionDateStr)
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse prediction date: %v", err)
+			// Try parsing as timestamp format
+			p.PredictionDate, err = time.Parse("2006-01-02T15:04:05Z", predictionDateStr)
+			if err != nil {
+				// Try parsing as timestamp with milliseconds
+				p.PredictionDate, err = time.Parse("2006-01-02T15:04:05.000Z", predictionDateStr)
+				if err != nil {
+					return nil, fmt.Errorf("failed to parse prediction date '%s': %v", predictionDateStr, err)
+				}
+			}
 		}
 
 		if actualPriceTimestamp.Valid {

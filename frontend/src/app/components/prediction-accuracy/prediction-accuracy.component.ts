@@ -46,8 +46,8 @@ interface PredictionTracking {
   selector: 'app-prediction-accuracy',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './prediction-accuracy.component.html',
-  styleUrls: ['./prediction-accuracy.component.css']
+  templateUrl: './prediction-accuracy.component.html'
+  // Removed styleUrls to use only global styles
 })
 export class PredictionAccuracyComponent implements OnInit {
   accuracySummaries: PredictionAccuracySummary[] = [];
@@ -83,12 +83,12 @@ export class PredictionAccuracyComponent implements OnInit {
     this.loading = true;
     this.error = null;
     
-    this.predictionTrackingService.getOverallPerformance().subscribe({
-      next: (data) => {
+    this.predictionTrackingService.getPerformanceMetrics().subscribe({
+      next: (data: any) => {
         this.accuracySummaries = data.symbol_summaries || [];
         this.loading = false;
       },
-      error: (error) => {
+      error: (error: any) => {
         this.error = 'Failed to load performance data: ' + error.message;
         this.loading = false;
       }

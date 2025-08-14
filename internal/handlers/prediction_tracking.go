@@ -28,23 +28,23 @@ func NewPredictionTrackingHandler(predictionTracker *services.PredictionTrackerS
 // RegisterRoutes registers all prediction tracking routes
 func (h *PredictionTrackingHandler) RegisterRoutes(router *mux.Router) {
 	// Daily prediction endpoints
-	router.HandleFunc("/api/v1/predictions/daily-run", h.ExecuteDailyPredictions).Methods("POST")
-	router.HandleFunc("/api/v1/predictions/daily-status", h.GetDailyStatus).Methods("GET")
+	router.HandleFunc("/api/v1/predictions/daily-run", h.ExecuteDailyPredictions).Methods("POST", "OPTIONS")
+	router.HandleFunc("/api/v1/predictions/daily-status", h.GetDailyStatus).Methods("GET", "OPTIONS")
 
 	// Accuracy tracking endpoints
-	router.HandleFunc("/api/v1/predictions/accuracy/{symbol}", h.GetAccuracySummary).Methods("GET")
-	router.HandleFunc("/api/v1/predictions/accuracy/summary", h.GetOverallPerformance).Methods("GET")
-	router.HandleFunc("/api/v1/predictions/accuracy/range", h.GetAccuracyRange).Methods("GET")
+	router.HandleFunc("/api/v1/predictions/accuracy/{symbol}", h.GetAccuracySummary).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/v1/predictions/accuracy/summary", h.GetOverallPerformance).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/v1/predictions/accuracy/range", h.GetAccuracyRange).Methods("GET", "OPTIONS")
 
 	// Historical data endpoints
-	router.HandleFunc("/api/v1/predictions/history/{symbol}", h.GetPredictionHistory).Methods("GET")
-	router.HandleFunc("/api/v1/predictions/history", h.GetAllPredictionHistory).Methods("GET")
-	router.HandleFunc("/api/v1/predictions/update-actual", h.UpdateActualPrice).Methods("POST")
-	router.HandleFunc("/api/v1/predictions/performance", h.GetPerformanceMetrics).Methods("GET")
+	router.HandleFunc("/api/v1/predictions/history/{symbol}", h.GetPredictionHistory).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/v1/predictions/history", h.GetAllPredictionHistory).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/v1/predictions/update-actual", h.UpdateActualPrice).Methods("POST", "OPTIONS")
+	router.HandleFunc("/api/v1/predictions/performance", h.GetPerformanceMetrics).Methods("GET", "OPTIONS")
 
 	// Trends and analytics
-	router.HandleFunc("/api/v1/predictions/trends/{symbol}", h.GetAccuracyTrends).Methods("GET")
-	router.HandleFunc("/api/v1/predictions/top-performers", h.GetTopPerformers).Methods("GET")
+	router.HandleFunc("/api/v1/predictions/trends/{symbol}", h.GetAccuracyTrends).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/v1/predictions/top-performers", h.GetTopPerformers).Methods("GET", "OPTIONS")
 }
 
 // ExecuteDailyPredictions handles manual execution of daily predictions
