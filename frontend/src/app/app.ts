@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { StockPredictionComponent } from './components/stock-prediction.component';
 import { PredictionAccuracyComponent } from './components/prediction-accuracy/prediction-accuracy.component';
+import { HistoricalDataComponent } from './components/historical-data.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, FormsModule, StockPredictionComponent, PredictionAccuracyComponent],
+  imports: [CommonModule, FormsModule, StockPredictionComponent, PredictionAccuracyComponent, HistoricalDataComponent],
   template: `
     <!-- Page Wrapper -->
     <div id="wrapper">
@@ -293,18 +294,7 @@ import { PredictionAccuracyComponent } from './components/prediction-accuracy/pr
               
               <!-- Historical Tab -->
               <div *ngSwitchCase="'historical'">
-                <div class="row">
-                  <div class="col-12">
-                    <div class="card shadow mb-4">
-                      <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">Historical Data</h6>
-                      </div>
-                      <div class="card-body">
-                        <p>Historical data analysis coming soon...</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <app-historical-data></app-historical-data>
               </div>
               
             </div>

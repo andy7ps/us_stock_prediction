@@ -1,0 +1,298 @@
+/* Historical Data Component Styles */
+
+/* Table Enhancements */
+.table {
+  font-size: 0.875rem;
+}
+
+.table th {
+  border-top: none;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.5px;
+  color: #5a5c69;
+  background-color: #f8f9fc;
+}
+
+.table td {
+  vertical-align: middle;
+  border-color: #e3e6f0;
+}
+
+.table tbody tr:hover {
+  background-color: #f8f9fc;
+  transition: background-color 0.15s ease-in-out;
+}
+
+/* Sortable Headers */
+.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.sortable:hover {
+  background-color: #e3e6f0 !important;
+}
+
+.sortable i {
+  opacity: 0.5;
+  transition: opacity 0.15s ease-in-out;
+}
+
+.sortable:hover i {
+  opacity: 1;
+}
+
+.sortable .fa-sort-up,
+.sortable .fa-sort-down {
+  opacity: 1;
+  color: #5a5c69;
+}
+
+/* Statistics Cards */
+.border-left-primary {
+  border-left: 0.25rem solid #4e73df !important;
+}
+
+.border-left-success {
+  border-left: 0.25rem solid #1cc88a !important;
+}
+
+.border-left-danger {
+  border-left: 0.25rem solid #e74a3b !important;
+}
+
+.border-left-info {
+  border-left: 0.25rem solid #36b9cc !important;
+}
+
+/* Card Hover Effects */
+.card {
+  transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Loading Spinner */
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+/* Pagination Styles */
+.pagination {
+  margin-bottom: 0;
+}
+
+.page-link {
+  color: #5a5c69;
+  border-color: #dddfeb;
+}
+
+.page-link:hover {
+  color: #224abe;
+  background-color: #eaecf4;
+  border-color: #dddfeb;
+}
+
+.page-item.active .page-link {
+  background-color: #4e73df;
+  border-color: #4e73df;
+}
+
+.page-item.disabled .page-link {
+  color: #858796;
+  background-color: #fff;
+  border-color: #dddfeb;
+}
+
+/* Form Controls */
+.form-control {
+  border-color: #d1d3e2;
+  font-size: 0.875rem;
+}
+
+.form-control:focus {
+  border-color: #bac8f3;
+  box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
+
+/* Button Styles */
+.btn-outline-primary {
+  color: #4e73df;
+  border-color: #4e73df;
+}
+
+.btn-outline-primary:hover {
+  color: #fff;
+  background-color: #4e73df;
+  border-color: #4e73df;
+}
+
+.btn-success {
+  background-color: #1cc88a;
+  border-color: #1cc88a;
+}
+
+.btn-success:hover {
+  background-color: #17a673;
+  border-color: #169b6b;
+}
+
+/* Alert Styles */
+.alert-danger {
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+  color: #721c24;
+}
+
+/* Text Colors */
+.text-success {
+  color: #1cc88a !important;
+}
+
+.text-danger {
+  color: #e74a3b !important;
+}
+
+.text-muted {
+  color: #858796 !important;
+}
+
+.text-primary {
+  color: #4e73df !important;
+}
+
+.text-info {
+  color: #36b9cc !important;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .table {
+    font-size: 0.75rem;
+  }
+  
+  .table th,
+  .table td {
+    padding: 0.5rem;
+  }
+  
+  .card-body {
+    padding: 1rem;
+  }
+  
+  .h5 {
+    font-size: 1rem;
+  }
+  
+  .fa-2x {
+    font-size: 1.5em;
+  }
+}
+
+@media (max-width: 576px) {
+  .table-responsive {
+    border: none;
+  }
+  
+  .table {
+    margin-bottom: 0;
+  }
+  
+  .pagination {
+    justify-content: center !important;
+  }
+  
+  .dataTables_info {
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+}
+
+/* Custom Scrollbar for Table */
+.table-responsive::-webkit-scrollbar {
+  height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Animation for data loading */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.table tbody tr {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Export button enhancement */
+.btn-success i {
+  margin-right: 0.5rem;
+}
+
+/* Statistics card icons */
+.fa-2x {
+  opacity: 0.1;
+}
+
+/* Form labels */
+.form-label {
+  font-weight: 600;
+  color: #5a5c69;
+  margin-bottom: 0.5rem;
+}
+
+/* Card header enhancements */
+.card-header {
+  background-color: #f8f9fc;
+  border-bottom: 1px solid #e3e6f0;
+}
+
+.card-header h6 {
+  color: #5a5c69;
+}
+
+/* No data state */
+.fa-3x {
+  font-size: 3em;
+  opacity: 0.3;
+}
+
+/* Refresh button animation */
+.fa-spin {
+  animation: fa-spin 1s infinite linear;
+}
+
+@keyframes fa-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

@@ -1,0 +1,310 @@
+<!-- Historical Data Component -->
+<div class="row">
+  
+  <!-- Controls Card -->
+  <div class="col-12 mb-4">
+    <div class="card shadow">
+      <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">
+          <i class="fas fa-chart-line mr-2"></i>Historical Data Controls
+        </h6>
+        <div class="dropdown no-arrow">
+          <button class="btn btn-sm btn-outline-primary" (click)="refreshData()" [disabled]="loading">
+            <i class="fas fa-sync-alt" [class.fa-spin]="loading"></i>
+            {{ loading ? 'Loading...' : 'Refresh' }}
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <!-- Symbol Selection -->
+          <div class="col-md-4 mb-3">
+            <label for="symbolSelect" class="form-label">
+              <i class="fas fa-chart-area mr-1"></i>Stock Symbol
+            </label>
+            <select id="symbolSelect" 
+                    class="form-control" 
+                    [(ngModel)]="selectedSymbol" 
+                    (change)="onSymbolChange()"
+                    [disabled]="loading">
+              <option *ngFor="let symbol of popularSymbols" [value]="symbol">
+                {{ symbol }}
+              </option>
+            </select>
+          </div>
+          
+          <!-- Days Selection -->
+          <div class="col-md-4 mb-3">
+            <label for="daysSelect" class="form-label">
+              <i class="fas fa-calendar-alt mr-1"></i>Time Period
+            </label>
+            <select id="daysSelect" 
+                    class="form-control" 
+                    [(ngModel)]="selectedDays" 
+                    (change)="onDaysChange()"
+                    [disabled]="loading">
+              <option *ngFor="let days of dayOptions" [value]="days">
+                {{ days }} days
+              </option>
+            </select>
+          </div>
+          
+          <!-- Export Button -->
+          <div class="col-md-4 mb-3 d-flex align-items-end">
+            <button class="btn btn-success btn-block" 
+                    (click)="exportToCSV()" 
+                    [disabled]="loading || historicalData.length === 0">
+              <i class="fas fa-download mr-2"></i>Export CSV
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Statistics Cards -->
+  <div class="col-12 mb-4" *ngIf="historicalData.length > 0">
+    <div class="row">
+      <!-- Average Price -->
+      <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+          <div class="card-body">
+            <div class="row no-gutters align-items-center">
+              <div class="col mr-2">
+                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                  Average Price
+                </div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                  {{ formatCurrency(statistics.avgPrice) }}
+                </div>
+              </div>
+              <div class="col-auto">
+                <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Highest Price -->
+      <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+          <div class="card-body">
+            <div class="row no-gutters align-items-center">
+              <div class="col mr-2">
+                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                  Highest Price
+                </div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                  {{ formatCurrency(statistics.highestPrice) }}
+                </div>
+              </div>
+              <div class="col-auto">
+                <i class="fas fa-arrow-up fa-2x text-gray-300"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Lowest Price -->
+      <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-danger shadow h-100 py-2">
+          <div class="card-body">
+            <div class="row no-gutters align-items-center">
+              <div class="col mr-2">
+                <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                  Lowest Price
+                </div>
+                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                  {{ formatCurrency(statistics.lowestPrice) }}
+                </div>
+              </div>
+              <div class="col-auto">
+                <i class="fas fa-arrow-down fa-2x text-gray-300"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Price Change -->
+      <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+          <div class="card-body">
+            <div class="row no-gutters align-items-center">
+              <div class="col mr-2">
+                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                  Period Change
+                </div>
+                <div class="h5 mb-0 font-weight-bold" 
+                     [ngClass]="getChangeColorClass(statistics.priceChangePercent)">
+                  {{ formatPercentage(statistics.priceChangePercent) }}
+                </div>
+                <div class="text-xs text-gray-500">
+                  {{ formatCurrency(statistics.priceChange) }}
+                </div>
+              </div>
+              <div class="col-auto">
+                <i class="fas fa-percentage fa-2x text-gray-300"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Error Alert -->
+  <div class="col-12 mb-4" *ngIf="error">
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      <i class="fas fa-exclamation-triangle mr-2"></i>
+      <strong>Error:</strong> {{ error }}
+      <button type="button" class="close" (click)="error = ''" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+  </div>
+  
+  <!-- Historical Data Table -->
+  <div class="col-12">
+    <div class="card shadow mb-4">
+      <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">
+          <i class="fas fa-table mr-2"></i>
+          Historical Data - {{ selectedSymbol }} ({{ selectedDays }} days)
+        </h6>
+        <div class="text-muted small">
+          Total Records: {{ historicalData.length }}
+        </div>
+      </div>
+      <div class="card-body">
+        
+        <!-- Loading Spinner -->
+        <div *ngIf="loading" class="text-center py-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="sr-only">Loading...</span>
+          </div>
+          <p class="mt-3 text-muted">Loading historical data...</p>
+        </div>
+        
+        <!-- Data Table -->
+        <div *ngIf="!loading && historicalData.length > 0" class="table-responsive">
+          <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
+            <thead class="thead-light">
+              <tr>
+                <th class="sortable" (click)="sortBy('date')">
+                  Date
+                  <i class="fas fa-sort ml-1" 
+                     [class.fa-sort-up]="sortColumn === 'date' && sortDirection === 'asc'"
+                     [class.fa-sort-down]="sortColumn === 'date' && sortDirection === 'desc'"></i>
+                </th>
+                <th class="sortable" (click)="sortBy('open')">
+                  Open
+                  <i class="fas fa-sort ml-1"
+                     [class.fa-sort-up]="sortColumn === 'open' && sortDirection === 'asc'"
+                     [class.fa-sort-down]="sortColumn === 'open' && sortDirection === 'desc'"></i>
+                </th>
+                <th class="sortable" (click)="sortBy('high')">
+                  High
+                  <i class="fas fa-sort ml-1"
+                     [class.fa-sort-up]="sortColumn === 'high' && sortDirection === 'asc'"
+                     [class.fa-sort-down]="sortColumn === 'high' && sortDirection === 'desc'"></i>
+                </th>
+                <th class="sortable" (click)="sortBy('low')">
+                  Low
+                  <i class="fas fa-sort ml-1"
+                     [class.fa-sort-up]="sortColumn === 'low' && sortDirection === 'asc'"
+                     [class.fa-sort-down]="sortColumn === 'low' && sortDirection === 'desc'"></i>
+                </th>
+                <th class="sortable" (click)="sortBy('close')">
+                  Close
+                  <i class="fas fa-sort ml-1"
+                     [class.fa-sort-up]="sortColumn === 'close' && sortDirection === 'asc'"
+                     [class.fa-sort-down]="sortColumn === 'close' && sortDirection === 'desc'"></i>
+                </th>
+                <th class="sortable" (click)="sortBy('volume')">
+                  Volume
+                  <i class="fas fa-sort ml-1"
+                     [class.fa-sort-up]="sortColumn === 'volume' && sortDirection === 'asc'"
+                     [class.fa-sort-down]="sortColumn === 'volume' && sortDirection === 'desc'"></i>
+                </th>
+                <th class="sortable" (click)="sortBy('change')">
+                  Change %
+                  <i class="fas fa-sort ml-1"
+                     [class.fa-sort-up]="sortColumn === 'change' && sortDirection === 'asc'"
+                     [class.fa-sort-down]="sortColumn === 'change' && sortDirection === 'desc'"></i>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of getPaginatedData(); trackBy: trackByDate">
+                <td class="font-weight-bold">
+                  {{ item.date?.toLocaleDateString() || item.timestamp }}
+                </td>
+                <td>{{ formatCurrency(item.open) }}</td>
+                <td class="text-success">{{ formatCurrency(item.high) }}</td>
+                <td class="text-danger">{{ formatCurrency(item.low) }}</td>
+                <td class="font-weight-bold">{{ formatCurrency(item.close) }}</td>
+                <td class="text-muted">{{ formatNumber(item.volume) }}</td>
+                <td [ngClass]="getChangeColorClass(item.change || 0)" class="font-weight-bold">
+                  <i class="fas" 
+                     [class.fa-arrow-up]="(item.change || 0) > 0"
+                     [class.fa-arrow-down]="(item.change || 0) < 0"
+                     [class.fa-minus]="(item.change || 0) === 0"></i>
+                  {{ formatPercentage(item.change || 0) }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- No Data Message -->
+        <div *ngIf="!loading && historicalData.length === 0" class="text-center py-5">
+          <i class="fas fa-chart-line fa-3x text-gray-300 mb-3"></i>
+          <h5 class="text-gray-600">No Historical Data Available</h5>
+          <p class="text-muted">
+            No historical data found for {{ selectedSymbol }}. 
+            Try selecting a different symbol or time period.
+          </p>
+        </div>
+        
+        <!-- Pagination -->
+        <div *ngIf="!loading && historicalData.length > itemsPerPage" class="row mt-4">
+          <div class="col-sm-12 col-md-5">
+            <div class="dataTables_info">
+              Showing {{ (currentPage - 1) * itemsPerPage + 1 }} to 
+              {{ Math.min(currentPage * itemsPerPage, historicalData.length) }} of 
+              {{ historicalData.length }} entries
+            </div>
+          </div>
+          <div class="col-sm-12 col-md-7">
+            <div class="dataTables_paginate paging_simple_numbers">
+              <ul class="pagination justify-content-end">
+                <li class="page-item" [class.disabled]="currentPage === 1">
+                  <a class="page-link" (click)="goToPage(currentPage - 1)" href="javascript:void(0)">
+                    Previous
+                  </a>
+                </li>
+                <li *ngFor="let page of getPageNumbers()" 
+                    class="page-item" 
+                    [class.active]="page === currentPage">
+                  <a class="page-link" (click)="goToPage(page)" href="javascript:void(0)">
+                    {{ page }}
+                  </a>
+                </li>
+                <li class="page-item" [class.disabled]="currentPage === getTotalPages()">
+                  <a class="page-link" (click)="goToPage(currentPage + 1)" href="javascript:void(0)">
+                    Next
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+  
+</div>
