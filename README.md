@@ -1,4 +1,4 @@
-# 📈 US Stock Prediction Service v3.3.1
+# 📈 US Stock Prediction Service v3.4.0
 
 [![Go Version](https://img.shields.io/badge/Go-1.23+-blue.svg)](https://golang.org)
 [![Python Version](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org)
@@ -6,7 +6,7 @@
 [![Bootstrap Version](https://img.shields.io/badge/Bootstrap-5.3.3-purple.svg)](https://getbootstrap.com)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://docker.com)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Release](https://img.shields.io/badge/Release-v3.3.1-brightgreen.svg)](https://github.com/andy7ps/us_stock_prediction/releases/tag/v3.3.1)
+[![Release](https://img.shields.io/badge/Release-v3.4.0-brightgreen.svg)](https://github.com/andy7ps/us_stock_prediction/releases/tag/v3.4.0)
 [![Production Ready](https://img.shields.io/badge/Production-Ready-success.svg)](#production-deployment)
 
 > **Full-stack enterprise-grade stock price prediction service with Bootstrap-enhanced Angular frontend, Go backend, persistent storage, advanced LSTM neural networks, ensemble ML intelligence, and comprehensive monitoring.**
@@ -97,7 +97,7 @@ cd us_stock_prediction
 - **📊 Data Visualization**: Interactive charts and confidence indicators
 - **🔄 Auto-refresh**: Automatic data updates and health monitoring
 
-### **🌐 Dynamic Hostname Support** *(New in v3.3.1)*
+### **🌐 Dynamic Hostname Support** *(Enhanced in v3.4.0)*
 - **Automatic Backend Discovery**: Frontend automatically detects and uses the correct backend URL
 - **Multi-IP Access**: Works seamlessly when accessed from different IP addresses
 - **Network Flexibility**: Perfect for Docker deployments, VMs, and cloud environments
@@ -131,7 +131,7 @@ cd us_stock_prediction
 - [Contributing](#-contributing)
 - [License](#-license)
 
-## 🤖 **Advanced ML Intelligence** *(Enhanced in v3.3)*
+## 🤖 **Advanced ML Intelligence** *(Enhanced in v3.4.0)*
 
 ### **Neural Network Architecture**
 - **🧠 Deep LSTM Networks**: Multi-layer neural networks with 128→64→32 neurons
@@ -141,7 +141,7 @@ cd us_stock_prediction
 - **🔄 Automatic Training**: Intelligent retraining based on age and performance
 - **📊 Performance Monitoring**: Real-time model performance tracking
 
-### **Supported Stock Symbols** *(Expanded in v3.3)*
+### **Supported Stock Symbols** *(Expanded in v3.4.0)*
 The system now supports **13 popular stock symbols**:
 - **Tech Giants**: NVDA, TSLA, AAPL, MSFT, GOOGL, AMZN
 - **Growth Stocks**: AUR, PLTR, SMCI
@@ -158,7 +158,7 @@ The system now supports **13 popular stock symbols**:
 - **⚡ 2-3 Second Response Time** for real-time predictions
 - **🔄 13 Stock Symbols** supported with intelligent training
 
-## 📅 **Automatic Training & Monitoring** *(New in v3.3)*
+## 📅 **Automatic Training & Monitoring** *(Enhanced in v3.4.0)*
 
 ### **Intelligent Retraining System**
 - **🔄 Age-Based**: Automatically retrain models older than 7 days

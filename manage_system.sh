@@ -1,9 +1,12 @@
 #!/bin/bash
 
-# System Management Script for Stock Prediction System
+# System Management Script for Stock Prediction System v3.4.0
 # Provides easy management of Docker services
 
 set -e
+
+# Version
+SERVICE_VERSION="v3.4.0"
 
 # Colors for output
 RED='\033[0;31m'

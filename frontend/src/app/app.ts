@@ -21,7 +21,7 @@ import { HistoricalDataComponent } from './components/historical-data.component'
           <div class="sidebar-brand-icon rotate-n-15">
             <i class="fas fa-chart-line"></i>
           </div>
-          <div class="sidebar-brand-text mx-3">Stock Prediction <sup>AI</sup></div>
+          <div class="sidebar-brand-text mx-3">Stock Prediction <sup>v3.4.0</sup></div>
         </a>
         
         <!-- Divider -->
@@ -309,7 +309,7 @@ import { HistoricalDataComponent } from './components/historical-data.component'
         <footer class="sticky-footer bg-white">
           <div class="container my-auto">
             <div class="copyright text-center my-auto">
-              <span>Copyright &copy; Stock Prediction Dashboard 2025 - Powered by SB Admin 2</span>
+              <span>Copyright &copy; Stock Prediction Dashboard v3.4.0 2025 - Powered by SB Admin 2</span>
             </div>
           </div>
         </footer>
@@ -349,7 +349,7 @@ import { HistoricalDataComponent } from './components/historical-data.component'
   styleUrls: ['./app.css']
 })
 export class AppComponent implements OnInit {
-  title = 'Stock Prediction Dashboard';
+  title = 'Stock Prediction Dashboard v3.4.0';
   activeTab = 'dashboard';
   searchSymbol = '';
   alertCount = 3;

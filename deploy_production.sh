@@ -44,6 +44,7 @@ print_feature() {
 # Configuration
 COMPOSE_FILE="docker-compose-production.yml"
 PROJECT_NAME="stock-prediction-prod"
+SERVICE_VERSION="v3.4.0"
 BOOTSTRAP_VERSION="5.3.3"
 ANGULAR_VERSION="20.1.0"
 GO_VERSION="1.23"
@@ -295,6 +296,7 @@ echo "   Redis Cache:                localhost:6379"
 echo ""
 
 print_header "🎨 Production Features:"
+print_feature "Stock Prediction Service $SERVICE_VERSION"
 print_feature "Bootstrap $BOOTSTRAP_VERSION with professional UI"
 print_feature "Angular $ANGULAR_VERSION with TypeScript"
 print_feature "Go $GO_VERSION backend with ML predictions"

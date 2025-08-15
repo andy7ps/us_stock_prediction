@@ -2,7 +2,7 @@
 
 ## 🎯 **CRITICAL SYSTEM REQUIREMENT**
 
-**As of v3.3.1, ALL deployments and ML training MUST use the `persistent_data/` directory structure. This is mandatory for data integrity and system reliability.**
+**As of v3.4.0, ALL deployments and ML training MUST use the `persistent_data/` directory structure. This is mandatory for data integrity and system reliability.**
 
 ---
 
