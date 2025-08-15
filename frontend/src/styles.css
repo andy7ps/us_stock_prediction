@@ -167,6 +167,12 @@ img {
   }
 }
 
+/* Custom Bootstrap Row Override - Reduced Negative Margins */
+.row {
+  margin-right: calc(-.2 * var(--bs-gutter-x)) !important;
+  margin-left: calc(-.2 * var(--bs-gutter-x)) !important;
+}
+
 /* Custom utility classes */
 .gradient-bg {
   background: var(--primary-gradient);

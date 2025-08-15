@@ -1,345 +1,485 @@
-/* Mantis Bootstrap Theme - App Component Styles */
+/* SB Admin 2 Stock Prediction Dashboard Custom Styles */
 
-/* Enhanced Card Hover Effects */
-.card {
+/* Custom Stock Prediction Enhancements */
+:root {
+  /* SB Admin 2 Color Palette */
+  --sb-primary: #4e73df;
+  --sb-primary-dark: #375a7f;
+  --sb-success: #1cc88a;
+  --sb-info: #36b9cc;
+  --sb-warning: #f6c23e;
+  --sb-danger: #e74a3b;
+  --sb-secondary: #858796;
+  --sb-dark: #5a5c69;
+  --sb-light: #f8f9fc;
+  --sb-gray-100: #f8f9fc;
+  --sb-gray-200: #eaecf4;
+  --sb-gray-300: #dddfeb;
+  --sb-gray-400: #d1d3e2;
+  --sb-gray-500: #b7b9cc;
+  --sb-gray-600: #858796;
+  --sb-gray-700: #6e707e;
+  --sb-gray-800: #5a5c69;
+  --sb-gray-900: #3a3b45;
+  
+  /* Stock Prediction Specific Colors */
+  --stock-buy: #1cc88a;
+  --stock-sell: #e74a3b;
+  --stock-hold: #f6c23e;
+  --confidence-high: #1cc88a;
+  --confidence-medium: #f6c23e;
+  --confidence-low: #e74a3b;
+}
+
+/* Custom Bootstrap Row Override - Reduced Negative Margins */
+.row {
+  margin-right: calc(-.2 * var(--bs-gutter-x)) !important;
+  margin-left: calc(-.2 * var(--bs-gutter-x)) !important;
+}
+
+/* Enhanced Sidebar Styling */
+.sidebar {
+  background: linear-gradient(180deg, #4e73df 10%, #224abe 100%);
+  background-size: cover;
+}
+
+.sidebar .sidebar-brand {
+  height: 4.375rem;
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 800;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  z-index: 1;
+}
+
+.sidebar .sidebar-brand .sidebar-brand-icon i {
+  font-size: 2rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.sidebar .sidebar-brand .sidebar-brand-text {
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.sidebar hr.sidebar-divider {
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.sidebar .sidebar-heading {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1rem;
+  padding: 1.25rem 1rem 0.25rem;
+}
+
+.sidebar .nav-item .nav-link {
+  display: block;
+  width: 100%;
+  text-decoration: none;
+  border-radius: 0.35rem;
+  color: rgba(255, 255, 255, 0.8);
+  padding: 1rem;
+  position: relative;
+  transition: all 0.3s;
+}
+
+.sidebar .nav-item .nav-link:hover {
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: translateX(5px);
+}
+
+.sidebar .nav-item.active .nav-link {
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.2);
+  box-shadow: inset 4px 0 0 rgba(255, 255, 255, 0.5);
+}
+
+.sidebar .nav-item .nav-link i {
+  font-size: 0.85rem;
+  margin-right: 0.25rem;
+  width: 1rem;
+  text-align: center;
+}
+
+/* Sidebar Card Enhancement */
+.sidebar .sidebar-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  margin: 1rem;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.sidebar .sidebar-card .sidebar-card-illustration {
+  height: 3rem;
+  display: block;
+  filter: brightness(0) invert(1);
+  opacity: 0.8;
+}
+
+.sidebar .sidebar-card p {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* Topbar Enhancements */
+.topbar {
+  height: 4.375rem;
+  background-color: #fff;
+  border-bottom: 1px solid #e3e6f0;
+}
+
+.topbar .navbar-search .form-control {
+  background-color: #f8f9fc;
+  border: 1px solid #d1d3e2;
+  border-radius: 10rem;
+  color: #6e707e;
+  font-size: 0.85rem;
+  height: calc(1.5em + 0.75rem + 2px);
+  padding: 0.375rem 0.75rem;
+}
+
+.topbar .navbar-search .form-control:focus {
+  background-color: #fff;
+  border-color: #4e73df;
+  box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
+
+.topbar .navbar-search .btn {
+  border-radius: 10rem;
+  background-color: #4e73df;
+  border-color: #4e73df;
+}
+
+/* Stock Prediction Card Styles */
+.stock-card {
   transition: all 0.3s ease;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-}
-
-/* Gradient Cards */
-.prediction-card {
-  background: linear-gradient(135deg, #4680ff 0%, #04a9f5 100%);
   border: none;
+  border-radius: 0.5rem;
+  box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+  overflow: hidden;
+}
+
+.stock-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0.5rem 2rem 0 rgba(58, 59, 69, 0.2);
+}
+
+.stock-card .card-header {
+  background: linear-gradient(45deg, #4e73df, #36b9cc);
+  color: white;
+  border-bottom: none;
+  padding: 1rem 1.25rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+}
+
+.stock-card .card-body {
+  padding: 1.5rem 1.25rem;
+}
+
+/* Trading Signal Badges */
+.trading-signal {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 10rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.trading-signal-buy {
+  background: linear-gradient(45deg, #1cc88a, #17a673);
   color: white;
 }
 
-.accuracy-card {
-  background: linear-gradient(135deg, #2ca87f 0%, #04a9f5 100%);
-  border: none;
+.trading-signal-sell {
+  background: linear-gradient(45deg, #e74a3b, #c0392b);
   color: white;
 }
 
-.analytics-card {
-  background: linear-gradient(135deg, #2196f3 0%, #4680ff 100%);
-  border: none;
-  color: white;
+.trading-signal-hold {
+  background: linear-gradient(45deg, #f6c23e, #f39c12);
+  color: #212529;
+}
+
+/* Stock Price Display */
+.stock-price {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #5a5c69;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.stock-symbol {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #4e73df;
+  text-transform: uppercase;
+  letter-spacing: 0.1rem;
+}
+
+/* Confidence Progress Bar */
+.confidence-progress {
+  height: 0.75rem;
+  border-radius: 0.5rem;
+  background-color: #eaecf4;
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.confidence-progress .progress-bar {
+  border-radius: 0.5rem;
+  transition: width 0.6s ease;
+}
+
+.confidence-high {
+  background: linear-gradient(45deg, #1cc88a, #17a673);
+}
+
+.confidence-medium {
+  background: linear-gradient(45deg, #f6c23e, #f39c12);
+}
+
+.confidence-low {
+  background: linear-gradient(45deg, #e74a3b, #c0392b);
+}
+
+/* Dashboard Cards */
+.dashboard-card {
+  border-left: 0.25rem solid #4e73df;
+  background: #fff;
+  box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+  transition: all 0.3s;
+}
+
+.dashboard-card:hover {
+  box-shadow: 0 0.5rem 2rem 0 rgba(58, 59, 69, 0.2);
+}
+
+.dashboard-card.border-left-primary {
+  border-left-color: #4e73df;
+}
+
+.dashboard-card.border-left-success {
+  border-left-color: #1cc88a;
+}
+
+.dashboard-card.border-left-info {
+  border-left-color: #36b9cc;
+}
+
+.dashboard-card.border-left-warning {
+  border-left-color: #f6c23e;
+}
+
+.dashboard-card.border-left-danger {
+  border-left-color: #e74a3b;
 }
 
 /* Metric Cards */
 .metric-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 1rem;
+  padding: 2rem;
   text-align: center;
-  padding: 2rem 1rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s ease;
 }
 
-.metric-value {
-  font-size: 2.5rem;
+.metric-card:hover {
+  transform: translateY(-5px);
+}
+
+.metric-card .metric-value {
+  font-size: 3rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
-.metric-value i {
-  font-size: 2rem;
-}
-
-.metric-label {
-  font-size: 0.875rem;
+.metric-card .metric-label {
+  font-size: 1.1rem;
   opacity: 0.9;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 500;
+  letter-spacing: 0.1rem;
 }
 
-/* Navigation Enhancements */
-.pc-navbar .nav-link {
-  position: relative;
-  overflow: hidden;
+/* Loading States */
+.loading-spinner {
+  display: inline-block;
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid rgba(78, 115, 223, 0.3);
+  border-radius: 50%;
+  border-top-color: #4e73df;
+  animation: spin 1s ease-in-out infinite;
 }
 
-.pc-navbar .nav-link::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(70, 128, 255, 0.1), transparent);
-  transition: left 0.5s;
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
-.pc-navbar .nav-link:hover::before {
-  left: 100%;
-}
-
-.pc-navbar .nav-link.active {
-  background: linear-gradient(135deg, rgba(70, 128, 255, 0.1) 0%, rgba(4, 169, 245, 0.1) 100%);
-  border-left: 3px solid #4680ff;
-  color: #4680ff;
-  font-weight: 600;
-}
-
-/* Button Enhancements */
-.btn {
-  font-weight: 500;
+/* Alert Enhancements */
+.alert {
+  border: none;
   border-radius: 0.5rem;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
 }
 
-.btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s;
+.alert-success {
+  background: linear-gradient(45deg, #d4edda, #c3e6cb);
+  color: #155724;
+  border-left: 4px solid #1cc88a;
 }
 
-.btn:hover::before {
-  left: 100%;
+.alert-warning {
+  background: linear-gradient(45deg, #fff3cd, #ffeaa7);
+  color: #856404;
+  border-left: 4px solid #f6c23e;
 }
 
-.btn-primary {
-  background: linear-gradient(135deg, #4680ff 0%, #04a9f5 100%);
-  border: none;
-  box-shadow: 0 2px 4px rgba(70, 128, 255, 0.3);
+.alert-danger {
+  background: linear-gradient(45deg, #f8d7da, #f5c6cb);
+  color: #721c24;
+  border-left: 4px solid #e74a3b;
 }
 
-.btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(70, 128, 255, 0.4);
-}
-
-.btn-success {
-  background: linear-gradient(135deg, #2ca87f 0%, #04a9f5 100%);
-  border: none;
-  box-shadow: 0 2px 4px rgba(44, 168, 127, 0.3);
-}
-
-.btn-success:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(44, 168, 127, 0.4);
-}
-
-.btn-outline-primary {
-  border: 2px solid #4680ff;
-  color: #4680ff;
-  background: transparent;
-}
-
-.btn-outline-primary:hover {
-  background: #4680ff;
-  color: white;
-  transform: translateY(-1px);
-}
-
-.btn-outline-success {
-  border: 2px solid #2ca87f;
-  color: #2ca87f;
-  background: transparent;
-}
-
-.btn-outline-success:hover {
-  background: #2ca87f;
-  color: white;
-  transform: translateY(-1px);
-}
-
-/* Header Enhancements */
-.pc-header {
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.95);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.pc-header h1 {
-  background: linear-gradient(135deg, #4680ff 0%, #04a9f5 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.alert-info {
+  background: linear-gradient(45deg, #d1ecf1, #bee5eb);
+  color: #0c5460;
+  border-left: 4px solid #36b9cc;
 }
 
 /* Dropdown Enhancements */
 .dropdown-menu {
   border: none;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-  border-radius: 0.75rem;
-  padding: 0.5rem 0;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  border-radius: 0.5rem;
 }
 
 .dropdown-item {
   padding: 0.75rem 1.5rem;
-  transition: all 0.2s ease;
-  border-radius: 0.5rem;
-  margin: 0 0.5rem;
+  transition: all 0.3s;
 }
 
 .dropdown-item:hover {
-  background: linear-gradient(135deg, rgba(70, 128, 255, 0.1) 0%, rgba(4, 169, 245, 0.1) 100%);
-  color: #4680ff;
-  transform: translateX(4px);
+  background-color: #f8f9fc;
+  color: #4e73df;
 }
 
-/* Tab Content Animations */
-.tab-pane {
-  opacity: 0;
-  transform: translateY(20px);
-  transition: all 0.3s ease;
-}
-
-.tab-pane.show.active {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Card Header Enhancements */
-.card-header {
-  background: linear-gradient(135deg, rgba(70, 128, 255, 0.05) 0%, rgba(4, 169, 245, 0.05) 100%);
-  border-bottom: 1px solid rgba(70, 128, 255, 0.1);
-}
-
-.card-header h5 {
-  color: #374151;
-  font-weight: 600;
-}
-
-/* Form Controls */
-.form-check-input:checked {
-  background-color: #4680ff;
-  border-color: #4680ff;
-}
-
-.form-check-input:focus {
-  border-color: #4680ff;
-  box-shadow: 0 0 0 0.25rem rgba(70, 128, 255, 0.25);
+/* Footer */
+.sticky-footer {
+  background-color: #f8f9fc;
+  border-top: 1px solid #e3e6f0;
 }
 
 /* Responsive Enhancements */
 @media (max-width: 768px) {
-  .metric-card {
-    padding: 1.5rem 1rem;
+  .sidebar {
+    width: 6.5rem;
   }
   
-  .metric-value {
-    font-size: 2rem;
+  .sidebar .sidebar-brand .sidebar-brand-text {
+    display: none;
   }
   
-  .pc-main {
-    padding: 1rem;
+  .sidebar .nav-item .nav-link span {
+    display: none;
   }
   
-  .card-body {
-    padding: 1rem;
+  .sidebar .sidebar-heading {
+    display: none;
+  }
+  
+  .sidebar .sidebar-card {
+    display: none;
+  }
+  
+  .stock-card {
+    margin-bottom: 1rem;
+  }
+  
+  .stock-price {
+    font-size: 1.5rem;
+  }
+  
+  .stock-symbol {
+    font-size: 1.25rem;
   }
 }
 
-/* Loading States */
-.loading {
-  position: relative;
-  overflow: hidden;
+/* Animation Classes */
+.animated {
+  animation-duration: 0.3s;
+  animation-fill-mode: both;
 }
 
-.loading::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(70, 128, 255, 0.1), transparent);
-  animation: loading 1.5s infinite;
+.fadeIn {
+  animation-name: fadeIn;
 }
 
-@keyframes loading {
-  0% { left: -100%; }
-  100% { left: 100%; }
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-/* Success/Error States */
-.alert {
-  border: none;
-  border-radius: 0.75rem;
-  padding: 1rem 1.5rem;
-  margin-bottom: 1.5rem;
+.slideInUp {
+  animation-name: slideInUp;
 }
 
-.alert-success {
-  background: linear-gradient(135deg, rgba(44, 168, 127, 0.1) 0%, rgba(4, 169, 245, 0.1) 100%);
-  color: #2ca87f;
-  border-left: 4px solid #2ca87f;
+@keyframes slideInUp {
+  from {
+    transform: translate3d(0, 100%, 0);
+    visibility: visible;
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
 }
 
-.alert-danger {
-  background: linear-gradient(135deg, rgba(220, 38, 38, 0.1) 0%, rgba(239, 68, 68, 0.1) 100%);
-  color: #dc2626;
-  border-left: 4px solid #dc2626;
-}
-
-.alert-warning {
-  background: linear-gradient(135deg, rgba(229, 138, 0, 0.1) 0%, rgba(245, 158, 11, 0.1) 100%);
-  color: #e58a00;
-  border-left: 4px solid #e58a00;
-}
-
-.alert-info {
-  background: linear-gradient(135deg, rgba(33, 150, 243, 0.1) 0%, rgba(70, 128, 255, 0.1) 100%);
-  color: #2196f3;
-  border-left: 4px solid #2196f3;
-}
-
-/* Scrollbar Styling */
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 0.5rem;
 }
 
 ::-webkit-scrollbar-track {
   background: #f1f1f1;
-  border-radius: 3px;
+  border-radius: 0.25rem;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #4680ff 0%, #04a9f5 100%);
-  border-radius: 3px;
+  background: #4e73df;
+  border-radius: 0.25rem;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #3b6fff 0%, #0396d6 100%);
+  background: #375a7f;
 }
 
-/* Animation Classes */
-.fade-in {
-  animation: fadeIn 0.5s ease-in;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.slide-in-left {
-  animation: slideInLeft 0.5s ease-out;
-}
-
-@keyframes slideInLeft {
-  from { opacity: 0; transform: translateX(-30px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
-.slide-in-right {
-  animation: slideInRight 0.5s ease-out;
-}
-
-@keyframes slideInRight {
-  from { opacity: 0; transform: translateX(30px); }
-  to { opacity: 1; transform: translateX(0); }
+/* Print Styles */
+@media print {
+  .sidebar,
+  .topbar,
+  .sticky-footer {
+    display: none !important;
+  }
+  
+  #content-wrapper {
+    margin-left: 0 !important;
+  }
 }

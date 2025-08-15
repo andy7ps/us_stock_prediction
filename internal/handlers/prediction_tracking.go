@@ -50,11 +50,26 @@ func (h *PredictionTrackingHandler) RegisterRoutes(router *mux.Router) {
 // ExecuteDailyPredictions handles manual execution of daily predictions
 func (h *PredictionTrackingHandler) ExecuteDailyPredictions(w http.ResponseWriter, r *http.Request) {
 	var req models.DailyPredictionRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, fmt.Sprintf("Invalid request body: %v", err), http.StatusBadRequest)
-		return
+	
+	// Handle empty request body (default to all symbols, current date, manual execution)
+	if r.ContentLength > 0 {
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, fmt.Sprintf("Invalid request body: %v", err), http.StatusBadRequest)
+			return
+		}
 	}
-
+	
+	// Set default values if not provided
+	if len(req.Symbols) == 0 {
+		// Use all supported symbols
+		req.Symbols = []string{"NVDA", "TSLA", "AAPL", "MSFT", "GOOGL", "AMZN", "AUR", "PLTR", "SMCI", "TSM", "MP", "SMR", "SPY"}
+	}
+	
+	if req.Date == nil {
+		now := time.Now()
+		req.Date = &now
+	}
+	
 	// Set execution type to manual
 	req.ExecutionType = models.ExecutionTypeManual
 

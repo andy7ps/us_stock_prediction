@@ -22,8 +22,15 @@ RUN npm config set fetch-retry-maxtimeout 60000
 # Install dependencies with exact versions
 RUN npm ci --no-audit --no-fund
 
-# Copy source code
+# Copy source code and SB Admin 2 assets
 COPY . .
+
+# Ensure SB Admin 2 assets are in the correct location
+RUN mkdir -p src/assets && \
+    cp -r template/startbootstrap-sb-admin-2-gh-pages/css src/assets/ && \
+    cp -r template/startbootstrap-sb-admin-2-gh-pages/js src/assets/ && \
+    cp -r template/startbootstrap-sb-admin-2-gh-pages/vendor src/assets/ && \
+    cp -r template/startbootstrap-sb-admin-2-gh-pages/img src/assets/
 
 # Build arguments
 ARG NODE_ENV=production
