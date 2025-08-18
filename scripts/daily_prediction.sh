@@ -180,16 +180,60 @@ update_actual_price_for_symbol() {
     
     # Get historical data to find the closing price
     local historical_response
-    historical_response=$(curl -s "$API_BASE_URL/api/v1/historical/$symbol?days=2" 2>/dev/null || echo "")
+    historical_response=$(curl -s "$API_BASE_URL/api/v1/historical/$symbol?days=5" 2>/dev/null || echo "")
     
     if [ -z "$historical_response" ]; then
         log_error "Failed to get historical data for $symbol"
         return 1
     fi
     
-    # This is a simplified approach - in production, you'd want more robust JSON parsing
-    # For now, we'll skip the actual price update and just log the attempt
-    log_info "Historical data retrieved for $symbol (actual price update logic would go here)"
+    # Parse JSON to extract closing price for the specific date
+    # The API returns timestamp in format "2025-08-15T13:30:00Z", we need to match the date part
+    local closing_price=""
+    
+    if command -v jq &> /dev/null; then
+        # Use jq for robust JSON parsing - match date from timestamp
+        closing_price=$(echo "$historical_response" | jq -r --arg date "$date" '
+            .data[] | select(.timestamp | startswith($date)) | .close // empty
+        ' 2>/dev/null || echo "")
+    else
+        # Fallback: simple text parsing - look for timestamp starting with the date
+        closing_price=$(echo "$historical_response" | grep -o "\"timestamp\":\"$date[^\"]*\"[^}]*\"close\":[0-9.]*" | grep -o "\"close\":[0-9.]*" | cut -d: -f2 | tr -d '"' || echo "")
+    fi
+    
+    if [ -z "$closing_price" ] || [ "$closing_price" = "null" ]; then
+        log_info "No closing price found for $symbol on $date (market may have been closed)"
+        return 1
+    fi
+    
+    # Validate that closing_price is a valid number
+    if ! [[ "$closing_price" =~ ^[0-9]+\.?[0-9]*$ ]]; then
+        log_error "Invalid closing price format for $symbol on $date: $closing_price"
+        return 1
+    fi
+    
+    # Update actual price via API - use printf to ensure proper JSON formatting
+    local payload
+    payload=$(printf '{"symbol":"%s","date":"%sT00:00:00Z","actual_close":%s}' "$symbol" "$date" "$closing_price")
+    
+    local response
+    local http_code
+    
+    response=$(curl -s -w "%{http_code}" -X POST \
+        -H "Content-Type: application/json" \
+        -d "$payload" \
+        "$API_BASE_URL/api/v1/predictions/update-actual" 2>/dev/null || echo "000")
+    
+    http_code="${response: -3}"
+    response_body="${response%???}"
+    
+    if [ "$http_code" = "200" ]; then
+        log_success "Successfully updated actual price for $symbol on $date: \$${closing_price}"
+        return 0
+    else
+        log_error "Failed to update actual price for $symbol on $date (HTTP $http_code): $response_body"
+        return 1
+    fi
 }
 
 # Function to send notification (placeholder)
