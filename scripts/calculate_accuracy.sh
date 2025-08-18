@@ -284,27 +284,95 @@ main() {
                 log_error "Failed to get top performers"
             fi
             ;;
+        "range")
+            if [ -z "${2:-}" ] || [ -z "${3:-}" ]; then
+                log_error "Start date and end date required for range command"
+                echo "Usage: $0 range START_DATE END_DATE [SYMBOLS]"
+                echo "Example: $0 range 2025-08-10 2025-08-15 NVDA,TSLA"
+                exit 1
+            fi
+            local start_date="$2"
+            local end_date="$3"
+            local symbols_filter="${4:-}"
+            
+            log_info "Displaying accuracy analysis for date range: $start_date to $end_date"
+            
+            # Use the dedicated range analysis script
+            if [ -f "$SCRIPT_DIR/analyze_accuracy_range.sh" ]; then
+                if [ -n "$symbols_filter" ]; then
+                    "$SCRIPT_DIR/analyze_accuracy_range.sh" "$start_date" "$end_date" "$symbols_filter"
+                else
+                    "$SCRIPT_DIR/analyze_accuracy_range.sh" "$start_date" "$end_date"
+                fi
+            else
+                log_error "Range analysis script not found: $SCRIPT_DIR/analyze_accuracy_range.sh"
+                exit 1
+            fi
+            ;;
+        "backfill")
+            if [ -z "${2:-}" ] || [ -z "${3:-}" ]; then
+                log_error "Start date and end date required for backfill command"
+                echo "Usage: $0 backfill START_DATE END_DATE [SYMBOLS]"
+                echo "Example: $0 backfill 2025-08-10 2025-08-15 NVDA,TSLA"
+                exit 1
+            fi
+            local start_date="$2"
+            local end_date="$3"
+            local symbols_filter="${4:-}"
+            
+            log_info "Running backfill for date range: $start_date to $end_date"
+            
+            # Call the update range script
+            local backfill_cmd="$SCRIPT_DIR/update_accuracy_range.sh"
+            if [ -n "$symbols_filter" ]; then
+                backfill_cmd="$backfill_cmd --symbols $symbols_filter"
+            fi
+            backfill_cmd="$backfill_cmd $start_date $end_date"
+            
+            if [ -f "$SCRIPT_DIR/update_accuracy_range.sh" ]; then
+                log_info "Executing: $backfill_cmd"
+                eval "$backfill_cmd"
+                
+                # Show updated results
+                echo ""
+                log_info "Backfill completed. Showing updated accuracy analysis:"
+                echo ""
+                main "range" "$start_date" "$end_date" "$symbols_filter"
+            else
+                log_error "update_accuracy_range.sh script not found"
+                exit 1
+            fi
+            ;;
         "--help"|"-h")
             echo "Usage: $0 [COMMAND] [OPTIONS]"
             echo ""
             echo "Calculate and display accuracy metrics for stock predictions"
             echo ""
             echo "Commands:"
-            echo "  summary          Display overall performance summary (default)"
-            echo "  symbol SYMBOL    Display accuracy for specific symbol"
-            echo "  top [N]          Display top N performing symbols (default: 10)"
-            echo "  update           Update actual prices and recalculate accuracy"
-            echo "  all              Run comprehensive analysis (update + summary + top)"
+            echo "  summary              Display overall performance summary (default)"
+            echo "  symbol SYMBOL        Display accuracy for specific symbol"
+            echo "  top [N]              Display top N performing symbols (default: 10)"
+            echo "  update               Update actual prices and recalculate accuracy"
+            echo "  all                  Run comprehensive analysis (update + summary + top)"
+            echo "  range START END [SYM] Display accuracy analysis for date range"
+            echo "  backfill START END [SYM] Update actual prices for date range and show results"
+            echo ""
+            echo "Date Range Commands:"
+            echo "  range 2025-08-10 2025-08-15           # Show accuracy for date range"
+            echo "  range 2025-08-10 2025-08-15 NVDA,TSLA # Show accuracy for specific symbols"
+            echo "  backfill 2025-08-10 2025-08-15        # Update prices and show results"
             echo ""
             echo "Environment Variables:"
-            echo "  API_BASE_URL     Base URL for the API (default: http://localhost:8081)"
+            echo "  API_BASE_URL         Base URL for the API (default: http://localhost:8081)"
             echo ""
             echo "Examples:"
-            echo "  $0                    # Show overall summary"
-            echo "  $0 symbol NVDA        # Show accuracy for NVDA"
-            echo "  $0 top 5              # Show top 5 performers"
-            echo "  $0 update             # Update actual prices"
-            echo "  $0 all                # Comprehensive analysis"
+            echo "  $0                              # Show overall summary"
+            echo "  $0 symbol NVDA                  # Show accuracy for NVDA"
+            echo "  $0 top 5                        # Show top 5 performers"
+            echo "  $0 update                       # Update actual prices"
+            echo "  $0 all                          # Comprehensive analysis"
+            echo "  $0 range 2025-08-10 2025-08-15 # Date range analysis"
+            echo "  $0 backfill 2025-08-01 2025-08-31 # Backfill entire month"
             exit 0
             ;;
         *)
