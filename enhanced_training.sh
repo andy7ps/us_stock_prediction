@@ -159,9 +159,9 @@ train_models() {
     log_info "Cache directory: $ML_CACHE_DIR"
     
     # Activate virtual environment if available
-    if [ -d "venv" ]; then
+    if [ -d "ml_env" ]; then
         log_info "Activating virtual environment"
-        source venv/bin/activate
+        source ml_env/bin/activate
     fi
     
     # Set environment variables for persistent data
@@ -202,8 +202,8 @@ evaluate_models() {
     log_info "Evaluating trained models"
     mkdir -p "$LOG_DIR/evaluation"
     
-    if [ -d "venv" ]; then
-        source venv/bin/activate
+    if [ -d "ml_env" ]; then
+        source ml_env/bin/activate
     fi
     
     # Set environment variables
@@ -436,7 +436,7 @@ health_check() {
     log_info "Performing health check..."
     
     # Check Python environment
-    if ! source venv/bin/activate 2>/dev/null; then
+    if ! source ml_env/bin/activate 2>/dev/null; then
         log_error "Virtual environment not available"
         return 1
     fi

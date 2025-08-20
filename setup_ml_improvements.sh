@@ -54,14 +54,14 @@ python_version=$(python3 --version 2>&1 | cut -d' ' -f2)
 print_status "Python version: $python_version"
 
 # Check if virtual environment exists
-if [ ! -d "venv" ]; then
+if [ ! -d "ml_env" ]; then
     print_status "Creating Python virtual environment..."
-    python3 -m venv venv
+    python3 -m ml_env ml_env
 fi
 
 # Activate virtual environment
 print_status "Activating virtual environment..."
-source venv/bin/activate
+source ml_env/bin/activate
 
 # Upgrade pip
 print_status "Upgrading pip..."

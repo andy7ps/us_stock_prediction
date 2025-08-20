@@ -88,8 +88,8 @@ tests_run=$((tests_run + 1))
 
 # Test 2: Check Python environment
 print_test "Checking Python environment..."
-if [ -d "venv" ]; then
-    source venv/bin/activate
+if [ -d "ml_env" ]; then
+    source ml_env/bin/activate
     print_pass "Virtual environment activated"
 else
     print_skip "Virtual environment not found, using system Python"
