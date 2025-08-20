@@ -1,0 +1,67 @@
+# Edit this file to introduce tasks to be run by cron.
+# 
+# Each task to run has to be defined through a single line
+# indicating with different fields when the task will be run
+# and what command to run for the task
+# 
+# To define the time you can provide concrete values for
+# minute (m), hour (h), day of month (dom), month (mon),
+# and day of week (dow) or use '*' in these fields (for 'any').
+# 
+# Notice that tasks will be started based on the cron's system
+# daemon's notion of time and timezones.
+# 
+# Output of the crontab jobs (including errors) is sent through
+# email to the user the crontab file belongs to (unless redirected).
+# 
+# For example, you can run a backup of all your user accounts
+# at 5 a.m every week with:
+# 0 5 * * 1 tar -zcf /var/backups/home.tgz /home/
+# 
+# For more information see the manual pages of crontab(5) and cron(8)
+# 
+# m h  dom mon dow   command
+30 * * * * root (/usr/sbin/ntpdate tock.stdtime.gov.tw && /sbin/hwclock -w) &> /dev/null
+
+# Generated on Wed Aug 13 01:54:20 PM CST 2025
+
+# Generated on Wed Aug 13 05:24:09 PM CST 2025
+# All jobs use persistent_data/ directory structure
+0 */2 * * * cd /home/achen/andy_misc/golang/ml/stock_prediction/v3 && du -sh ./persistent_data >> ./persistent_data/logs/monitoring/disk_usage.log 2>&1
+
+# ML Stock Prediction Automatic Jobs - Persistent Data Edition
+# Generated on Wed Aug 13 05:56:39 PM CST 2025
+# All jobs use persistent_data/ directory structure
+0 2 * * 0 cd /home/achen/andy_misc/golang/ml/stock_prediction/v3 && ./enhanced_training.sh >> ./persistent_data/logs/training/weekly.log 2>&1
+0 6,12,18 * * 1-5 cd /home/achen/andy_misc/golang/ml/stock_prediction/v3 && ./monitor_performance.sh >> ./persistent_data/logs/monitoring/performance.log 2>&1
+0 1 1 * * cd /home/achen/andy_misc/golang/ml/stock_prediction/v3 && ./enhanced_training.sh --force >> ./persistent_data/logs/training/monthly.log 2>&1
+0 3 * * * cd /home/achen/andy_misc/golang/ml/stock_prediction/v3 && ./manage_ml_models.sh clean >> ./persistent_data/logs/cleanup/daily.log 2>&1
+0 4 * * * cd /home/achen/andy_misc/golang/ml/stock_prediction/v3 && ./manage_ml_models.sh backup >> ./persistent_data/logs/cleanup/backup.log 2>&1
+0 */2 * * * cd /home/achen/andy_misc/golang/ml/stock_prediction/v3 && du -sh ./persistent_data >> ./persistent_data/logs/monitoring/disk_usage.log 2>&1
+
+# Daily Stock Prediction Job - Added by setup_daily_predictions.sh
+# Runs at 9:00 AM Taipei time (1:00 AM UTC)
+PATH=/usr/local/bin:/usr/bin:/bin
+API_BASE_URL=http://localhost:8081
+DAILY_PREDICTION_SYMBOLS=NVDA,TSLA,AAPL,MSFT,GOOGL,AMZN,AUR,PLTR,SMCI,TSM,MP,SMR,SPY,META,NOC,RTX,LMT
+0 1 * * * cd /home/achen/andy_misc/golang/ml/stock_prediction/v3 && /home/achen/andy_misc/golang/ml/stock_prediction/v3/scripts/generate_today_predictions.sh >> /home/achen/andy_misc/golang/ml/stock_prediction/v3/logs/daily_prediction_cron.log 2>&1
+
+# Accuracy Tracking Jobs - Added by setup_accuracy_tracking.sh
+# Update actual prices and calculate accuracy metrics
+PATH=/usr/local/bin:/usr/bin:/bin
+API_BASE_URL=http://localhost:8081
+
+# Update actual prices daily at 10:00 AM Taipei time (2:00 AM UTC)
+# This runs after markets close to get the latest closing prices
+0 2 * * 1-5 cd /home/achen/andy_misc/golang/ml/stock_prediction/v3 && /home/achen/andy_misc/golang/ml/stock_prediction/v3/scripts/update_actual_prices.sh >> /home/achen/andy_misc/golang/ml/stock_prediction/v3/logs/accuracy_tracking_cron.log 2>&1
+
+# Calculate accuracy metrics daily at 10:30 AM Taipei time (2:30 AM UTC)
+30 2 * * 1-5 cd /home/achen/andy_misc/golang/ml/stock_prediction/v3 && /home/achen/andy_misc/golang/ml/stock_prediction/v3/scripts/calculate_accuracy.sh summary >> /home/achen/andy_misc/golang/ml/stock_prediction/v3/logs/accuracy_summary_cron.log 2>&1
+
+# Weekly comprehensive accuracy analysis on Sundays at 3:00 AM UTC (11:00 AM Taipei)
+0 3 * * 0 cd /home/achen/andy_misc/golang/ml/stock_prediction/v3 && /home/achen/andy_misc/golang/ml/stock_prediction/v3/scripts/calculate_accuracy.sh all >> /home/achen/andy_misc/golang/ml/stock_prediction/v3/logs/accuracy_weekly_cron.log 2>&1
+
+
+# Daily Prediction Monitoring - Added by ensure_daily_predictions.sh
+# Check for missing predictions every 6 hours on weekdays
+0 6,12,18 * * 1-5 cd /home/achen/andy_misc/golang/ml/stock_prediction/v3 && /home/achen/andy_misc/golang/ml/stock_prediction/v3/scripts/monitor_daily_predictions.sh fix >> /home/achen/andy_misc/golang/ml/stock_prediction/v3/logs/prediction_monitoring_cron.log 2>&1
