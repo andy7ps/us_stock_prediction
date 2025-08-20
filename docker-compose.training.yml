@@ -1,0 +1,145 @@
+version: '3.8'
+
+# 🐳 Docker Training Environment
+# Optimized for ML model training with persistent data storage
+# No virtual environments needed - everything runs in isolated containers
+
+services:
+  # ML Training Service
+  ml-trainer:
+    build:
+      context: .
+      dockerfile: Dockerfile.training
+    container_name: stock_ml_trainer
+    environment:
+      # Python environment
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      - TF_CPP_MIN_LOG_LEVEL=2
+      
+      # Training configuration
+      - TRAINING_MODE=docker
+      - MODEL_BASE_PATH=/app/persistent_data/ml_models
+      - LOG_BASE_PATH=/app/persistent_data/logs
+      
+      # Data configuration
+      - DATA_CACHE_PATH=/app/persistent_data/stock_data/cache
+      - BACKUP_PATH=/app/persistent_data/backups
+    
+    volumes:
+      # Persistent data storage - ALL training outputs saved here
+      - ./persistent_data:/app/persistent_data
+      
+      # Database storage
+      - ./database_data:/app/database_data
+      
+      # Training scripts (read-only)
+      - ./scripts:/app/scripts:ro
+      
+      # Configuration files
+      - ./persistent_data/config:/app/config
+    
+    working_dir: /app
+    
+    # Keep container running for interactive training
+    tty: true
+    stdin_open: true
+    
+    # Resource limits for training
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
+    
+    networks:
+      - training-network
+    
+    labels:
+      - "com.docker.compose.service=ml-trainer"
+      - "description=ML Model Training Service with Persistent Storage"
+
+  # Optional: Redis for caching during training
+  redis-training:
+    image: redis:7.2-alpine
+    container_name: stock_redis_training
+    ports:
+      - "6380:6379"  # Different port to avoid conflicts
+    volumes:
+      # Redis data persistence
+      - ./persistent_data/redis_training:/data
+    restart: unless-stopped
+    networks:
+      - training-network
+    labels:
+      - "com.docker.compose.service=redis-training"
+      - "description=Redis Cache for Training"
+
+  # Optional: Monitoring during training
+  training-monitor:
+    image: python:3.11-slim
+    container_name: stock_training_monitor
+    volumes:
+      - ./persistent_data:/app/persistent_data:ro
+      - ./scripts:/app/scripts:ro
+    working_dir: /app
+    command: >
+      bash -c "
+        pip install --no-cache-dir watchdog &&
+        python3 -c '
+        import time
+        import os
+        from watchdog.observers import Observer
+        from watchdog.events import FileSystemEventHandler
+        
+        class TrainingMonitor(FileSystemEventHandler):
+            def on_created(self, event):
+                if event.is_file and (event.src_path.endswith(\".h5\") or event.src_path.endswith(\".pkl\")):
+                    print(f\"📊 New model file created: {os.path.basename(event.src_path)}\")
+            
+            def on_modified(self, event):
+                if event.is_file and event.src_path.endswith(\".log\"):
+                    print(f\"📝 Training log updated: {os.path.basename(event.src_path)}\")
+        
+        observer = Observer()
+        observer.schedule(TrainingMonitor(), \"/app/persistent_data\", recursive=True)
+        observer.start()
+        
+        print(\"🔍 Training monitor started - watching for model files...\")
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            observer.stop()
+        observer.join()
+        '
+      "
+    networks:
+      - training-network
+    labels:
+      - "com.docker.compose.service=training-monitor"
+      - "description=Training Progress Monitor"
+
+networks:
+  training-network:
+    driver: bridge
+    labels:
+      - "com.docker.compose.network=training"
+      - "description=ML Training Network"
+
+# Volumes for persistent data
+volumes:
+  persistent_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./persistent_data
+  
+  database_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./database_data
