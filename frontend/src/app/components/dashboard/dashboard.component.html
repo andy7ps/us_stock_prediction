@@ -1,0 +1,194 @@
+<!-- Dashboard -->
+<div class="container-fluid py-4">
+  <!-- Welcome Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm bg-gradient-primary text-white">
+        <div class="card-body py-4">
+          <div class="row align-items-center">
+            <div class="col-md-8">
+              <h1 class="card-title mb-2">
+                <i class="fas fa-chart-line me-3"></i>
+                Stock Prediction Dashboard
+              </h1>
+              <p class="card-text mb-0 opacity-75">
+                Welcome to your comprehensive stock prediction and analysis platform
+              </p>
+            </div>
+            <div class="col-md-4 text-md-end">
+              <div class="d-flex justify-content-md-end gap-2">
+                <button class="btn btn-light btn-sm" routerLink="/predictions">
+                  <i class="fas fa-brain me-1"></i>
+                  New Prediction
+                </button>
+                <button class="btn btn-outline-light btn-sm" routerLink="/charts">
+                  <i class="fas fa-chart-candlestick me-1"></i>
+                  View Charts
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body text-center">
+          <div class="text-primary mb-2">
+            <i class="fas fa-chart-bar fa-2x"></i>
+          </div>
+          <h3 class="card-title text-primary">{{ stats.totalPredictions }}</h3>
+          <p class="card-text text-muted mb-0">Total Predictions</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body text-center">
+          <div class="text-success mb-2">
+            <i class="fas fa-bullseye fa-2x"></i>
+          </div>
+          <h3 class="card-title text-success">{{ stats.accurateCount }}</h3>
+          <p class="card-text text-muted mb-0">With Actual Data</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body text-center">
+          <div class="text-info mb-2">
+            <i class="fas fa-percentage fa-2x"></i>
+          </div>
+          <h3 class="card-title text-info">{{ stats.averageAccuracy }}%</h3>
+          <p class="card-text text-muted mb-0">Avg Confidence</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body text-center">
+          <div class="text-warning mb-2">
+            <i class="fas fa-trophy fa-2x"></i>
+          </div>
+          <h3 class="card-title text-warning">{{ stats.topPerformer }}</h3>
+          <p class="card-text text-muted mb-0">Top Performer</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Row -->
+  <div class="row">
+    <!-- Popular Stocks -->
+    <div class="col-lg-8 mb-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white border-0 py-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+              <i class="fas fa-star text-warning me-2"></i>
+              Popular Stocks
+            </h5>
+            <button class="btn btn-outline-primary btn-sm" routerLink="/charts">
+              <i class="fas fa-chart-line me-1"></i>
+              View All Charts
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6" *ngFor="let stock of popularSymbols">
+              <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                <div>
+                  <div class="fw-bold">{{ stock.symbol }}</div>
+                  <small class="text-muted">{{ stock.name }}</small>
+                </div>
+                <div class="text-end">
+                  <div class="fw-semibold">${{ stock.price.toFixed(2) }}</div>
+                  <small [class]="getChangeClass(stock.change)">
+                    <i [class]="getChangeIcon(stock.change) + ' me-1'"></i>
+                    {{ stock.change > 0 ? '+' : '' }}{{ stock.change.toFixed(1) }}%
+                  </small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activities -->
+    <div class="col-lg-4 mb-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white border-0 py-3">
+          <h5 class="card-title mb-0">
+            <i class="fas fa-clock text-info me-2"></i>
+            Recent Activities
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="activity-feed">
+            <div class="activity-item d-flex align-items-start mb-3" *ngFor="let activity of recentActivities">
+              <div class="activity-icon me-3">
+                <i [class]="getStatusIcon(activity.status)" [class]="getStatusClass(activity.status)"></i>
+              </div>
+              <div class="activity-content flex-grow-1">
+                <div class="fw-semibold">{{ activity.action }}</div>
+                <div class="text-muted small">{{ activity.symbol }} • {{ activity.time }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0 py-3">
+          <h5 class="card-title mb-0">
+            <i class="fas fa-bolt text-primary me-2"></i>
+            Quick Actions
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-3 col-sm-6 mb-3">
+              <button class="btn btn-outline-primary w-100 py-3" routerLink="/predictions">
+                <i class="fas fa-brain fa-2x d-block mb-2"></i>
+                <div class="fw-semibold">Generate Prediction</div>
+                <small class="text-muted">Get AI-powered stock predictions</small>
+              </button>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+              <button class="btn btn-outline-success w-100 py-3" routerLink="/charts">
+                <i class="fas fa-chart-candlestick fa-2x d-block mb-2"></i>
+                <div class="fw-semibold">View Charts</div>
+                <small class="text-muted">Interactive candlestick charts</small>
+              </button>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+              <button class="btn btn-outline-info w-100 py-3" routerLink="/historical">
+                <i class="fas fa-history fa-2x d-block mb-2"></i>
+                <div class="fw-semibold">Historical Data</div>
+                <small class="text-muted">Analyze historical performance</small>
+              </button>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+              <button class="btn btn-outline-warning w-100 py-3" routerLink="/accuracy">
+                <i class="fas fa-bullseye fa-2x d-block mb-2"></i>
+                <div class="fw-semibold">Accuracy Tracking</div>
+                <small class="text-muted">Monitor prediction accuracy</small>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
