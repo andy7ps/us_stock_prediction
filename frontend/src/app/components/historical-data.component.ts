@@ -1,7 +1,37 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { StockPredictionService, HistoricalDataItem } from '../services/stock-prediction.service';
+import { StockPredictionService, HistoricalData } from '../services/stock-prediction.service';
+
+interface HistoricalDataItem {
+  symbol: string;
+  timestamp: string;
+  date?: Date; // For template compatibility
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+  // Computed fields for display
+  change?: number;
+  changePercent?: number;
+  changeClass?: string;
+  changeIcon?: string;
+}
+
+interface Statistics {
+  average: number;
+  highest: number;
+  lowest: number;
+  totalChange: number;
+  totalChangePercent: number;
+  // Additional properties for template compatibility
+  avgPrice: number;
+  highestPrice: number;
+  lowestPrice: number;
+  priceChange: number;
+  priceChangePercent: number;
+}
 
 @Component({
   selector: 'app-historical-data',
@@ -11,188 +41,145 @@ import { StockPredictionService, HistoricalDataItem } from '../services/stock-pr
   styleUrls: ['./historical-data.component.css']
 })
 export class HistoricalDataComponent implements OnInit {
-  // Make Math available in template
-  Math = Math;
-  
-  // Component state
-  selectedSymbol: string = 'NVDA';
-  selectedDays: number = 60;
+  selectedSymbol = 'NVDA';
+  selectedDays = 30;
   historicalData: HistoricalDataItem[] = [];
-  loading: boolean = false;
-  error: string = '';
+  statistics: Statistics = { 
+    average: 0, 
+    highest: 0, 
+    lowest: 0, 
+    totalChange: 0, 
+    totalChangePercent: 0,
+    avgPrice: 0,
+    highestPrice: 0,
+    lowestPrice: 0,
+    priceChange: 0,
+    priceChangePercent: 0
+  };
+  isLoading = false;
+  error = '';
   
-  // Popular stock symbols
-  popularSymbols: string[] = [
+  // Pagination
+  currentPage = 1;
+  itemsPerPage = 20;
+  totalItems = 0;
+  
+  // Sorting
+  sortColumn = 'timestamp';
+  sortDirection: 'asc' | 'desc' = 'desc';
+
+  symbols = [
     'NVDA', 'TSLA', 'AAPL', 'MSFT', 'GOOGL', 'AMZN', 
     'AUR', 'PLTR', 'SMCI', 'TSM', 'MP', 'SMR', 'SPY'
   ];
   
-  // Day options
-  dayOptions: number[] = [30, 60, 90, 180, 365];
+  // Template compatibility aliases
+  get popularSymbols() { return this.symbols; }
+  get loading() { return this.isLoading; }
   
-  // Pagination
-  currentPage: number = 1;
-  itemsPerPage: number = 20;
-  
-  // Sorting
-  sortColumn: string = 'date';
-  sortDirection: 'asc' | 'desc' = 'desc';
-  
-  // Statistics
-  statistics = {
-    avgPrice: 0,
-    highestPrice: 0,
-    lowestPrice: 0,
-    totalVolume: 0,
-    priceChange: 0,
-    priceChangePercent: 0
-  };
+  dayOptions = [30, 60, 90, 180, 365];
+
+  // Make Math available in template
+  Math = Math;
 
   constructor(private stockService: StockPredictionService) {}
 
-  ngOnInit(): void {
+  ngOnInit() {
     this.loadHistoricalData();
   }
 
-  /**
-   * Load historical data for selected symbol
-   */
-  loadHistoricalData(): void {
-    if (!this.selectedSymbol) {
-      this.error = 'Please select a stock symbol';
-      return;
-    }
-
-    this.loading = true;
+  loadHistoricalData() {
+    this.isLoading = true;
     this.error = '';
-
+    
     this.stockService.getHistoricalData(this.selectedSymbol, this.selectedDays)
       .subscribe({
-        next: (data) => {
+        next: (data: HistoricalDataItem[]) => {
           this.historicalData = this.processHistoricalData(data);
           this.calculateStatistics();
-          this.loading = false;
+          this.totalItems = this.historicalData.length;
+          this.isLoading = false;
         },
-        error: (error) => {
-          this.error = error.message || 'Failed to load historical data';
-          this.loading = false;
-          console.error('Historical data error:', error);
+        error: (error: any) => {
+          this.error = 'Failed to load historical data. Please try again.';
+          this.isLoading = false;
+          console.error('Error loading historical data:', error);
         }
       });
   }
 
-  /**
-   * Process and enhance historical data
-   */
-  private processHistoricalData(data: HistoricalDataItem[]): HistoricalDataItem[] {
-    return data.map((item, index) => {
-      // Convert timestamp to Date object
-      item.date = new Date(item.timestamp);
+  processHistoricalData(data: HistoricalDataItem[]): HistoricalDataItem[] {
+    return data.map((item, index, array) => {
+      const processed: HistoricalDataItem = { ...item };
       
-      // Calculate daily change
-      if (index < data.length - 1) {
-        const previousClose = data[index + 1].close;
-        item.change = ((item.close - previousClose) / previousClose) * 100;
-      } else {
-        item.change = 0;
+      // Add date property for template compatibility
+      processed.date = new Date(item.timestamp);
+      
+      // Calculate change from previous day
+      if (index < array.length - 1) {
+        const previousClose = array[index + 1].close;
+        processed.change = item.close - previousClose;
+        processed.changePercent = (processed.change / previousClose) * 100;
+        processed.changeClass = processed.change >= 0 ? 'text-success' : 'text-danger';
+        processed.changeIcon = processed.change >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
       }
       
-      return item;
-    }).sort((a, b) => {
-      // Sort by date descending by default
-      return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+      return processed;
     });
   }
 
-  /**
-   * Calculate statistics for the historical data
-   */
-  private calculateStatistics(): void {
-    if (this.historicalData.length === 0) {
-      return;
-    }
-
+  calculateStatistics() {
+    if (this.historicalData.length === 0) return;
+    
     const prices = this.historicalData.map(item => item.close);
-    const volumes = this.historicalData.map(item => item.volume);
+    this.statistics.average = prices.reduce((sum, price) => sum + price, 0) / prices.length;
+    this.statistics.highest = Math.max(...prices);
+    this.statistics.lowest = Math.min(...prices);
     
-    this.statistics.avgPrice = prices.reduce((sum, price) => sum + price, 0) / prices.length;
-    this.statistics.highestPrice = Math.max(...prices);
-    this.statistics.lowestPrice = Math.min(...prices);
-    this.statistics.totalVolume = volumes.reduce((sum, volume) => sum + volume, 0);
+    // Template compatibility aliases
+    this.statistics.avgPrice = this.statistics.average;
+    this.statistics.highestPrice = this.statistics.highest;
+    this.statistics.lowestPrice = this.statistics.lowest;
     
-    // Calculate price change from first to last
-    if (this.historicalData.length >= 2) {
+    if (this.historicalData.length > 1) {
       const firstPrice = this.historicalData[this.historicalData.length - 1].close;
       const lastPrice = this.historicalData[0].close;
-      this.statistics.priceChange = lastPrice - firstPrice;
-      this.statistics.priceChangePercent = (this.statistics.priceChange / firstPrice) * 100;
+      this.statistics.totalChange = lastPrice - firstPrice;
+      this.statistics.totalChangePercent = (this.statistics.totalChange / firstPrice) * 100;
+      
+      // Template compatibility aliases
+      this.statistics.priceChange = this.statistics.totalChange;
+      this.statistics.priceChangePercent = this.statistics.totalChangePercent;
     }
   }
 
-  /**
-   * Handle symbol selection
-   */
-  onSymbolChange(): void {
+  onSymbolChange() {
     this.currentPage = 1;
     this.loadHistoricalData();
   }
 
-  /**
-   * Handle days selection
-   */
-  onDaysChange(): void {
+  onDaysChange() {
     this.currentPage = 1;
     this.loadHistoricalData();
   }
 
-  /**
-   * Sort data by column
-   */
-  sortBy(column: string): void {
+  sort(column: string) {
     if (this.sortColumn === column) {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
     } else {
       this.sortColumn = column;
       this.sortDirection = 'asc';
     }
-
+    
     this.historicalData.sort((a, b) => {
-      let aValue: any;
-      let bValue: any;
-
-      switch (column) {
-        case 'date':
-          aValue = new Date(a.timestamp).getTime();
-          bValue = new Date(b.timestamp).getTime();
-          break;
-        case 'open':
-          aValue = a.open;
-          bValue = b.open;
-          break;
-        case 'high':
-          aValue = a.high;
-          bValue = b.high;
-          break;
-        case 'low':
-          aValue = a.low;
-          bValue = b.low;
-          break;
-        case 'close':
-          aValue = a.close;
-          bValue = b.close;
-          break;
-        case 'volume':
-          aValue = a.volume;
-          bValue = b.volume;
-          break;
-        case 'change':
-          aValue = a.change || 0;
-          bValue = b.change || 0;
-          break;
-        default:
-          return 0;
+      let aValue = (a as any)[column];
+      let bValue = (b as any)[column];
+      
+      if (column === 'timestamp') {
+        aValue = new Date(aValue).getTime();
+        bValue = new Date(bValue).getTime();
       }
-
+      
       if (this.sortDirection === 'asc') {
         return aValue > bValue ? 1 : -1;
       } else {
@@ -201,56 +188,102 @@ export class HistoricalDataComponent implements OnInit {
     });
   }
 
-  /**
-   * Get paginated data
-   */
-  getPaginatedData(): HistoricalDataItem[] {
+  getSortIcon(column: string): string {
+    if (this.sortColumn !== column) return 'fas fa-sort';
+    return this.sortDirection === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down';
+  }
+
+  get paginatedData(): HistoricalDataItem[] {
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
     const endIndex = startIndex + this.itemsPerPage;
     return this.historicalData.slice(startIndex, endIndex);
   }
 
-  /**
-   * Get total pages
-   */
-  getTotalPages(): number {
-    return Math.ceil(this.historicalData.length / this.itemsPerPage);
+  get totalPages(): number {
+    return Math.ceil(this.totalItems / this.itemsPerPage);
   }
 
-  /**
-   * Go to specific page
-   */
-  goToPage(page: number): void {
-    if (page >= 1 && page <= this.getTotalPages()) {
-      this.currentPage = page;
-    }
-  }
-
-  /**
-   * Get page numbers for pagination
-   */
-  getPageNumbers(): number[] {
-    const totalPages = this.getTotalPages();
-    const pages: number[] = [];
-    const maxVisiblePages = 5;
+  get pages(): number[] {
+    const pages = [];
+    const maxPages = Math.min(5, this.totalPages);
+    let startPage = Math.max(1, this.currentPage - Math.floor(maxPages / 2));
+    let endPage = Math.min(this.totalPages, startPage + maxPages - 1);
     
-    let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
-    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-    
-    if (endPage - startPage < maxVisiblePages - 1) {
-      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    if (endPage - startPage + 1 < maxPages) {
+      startPage = Math.max(1, endPage - maxPages + 1);
     }
     
     for (let i = startPage; i <= endPage; i++) {
       pages.push(i);
     }
-    
     return pages;
   }
 
-  /**
-   * Format currency
-   */
+  goToPage(page: number) {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+    }
+  }
+
+  exportToCsv() {
+    const headers = ['Date', 'Symbol', 'Open', 'High', 'Low', 'Close', 'Volume', 'Change', 'Change %'];
+    const csvContent = [
+      headers.join(','),
+      ...this.historicalData.map(item => [
+        new Date(item.timestamp).toLocaleDateString(),
+        item.symbol,
+        item.open.toFixed(2),
+        item.high.toFixed(2),
+        item.low.toFixed(2),
+        item.close.toFixed(2),
+        item.volume,
+        item.change?.toFixed(2) || '0.00',
+        item.changePercent?.toFixed(2) || '0.00'
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${this.selectedSymbol}_historical_${this.selectedDays}days.csv`;
+    link.click();
+    window.URL.revokeObjectURL(url);
+  }
+
+  trackByTimestamp(index: number, item: HistoricalDataItem): string {
+    return item.timestamp;
+  }
+
+  // Additional methods for template compatibility
+  refreshData() {
+    this.loadHistoricalData();
+  }
+
+  sortBy(column: string) {
+    this.sort(column);
+  }
+
+  getPaginatedData(): HistoricalDataItem[] {
+    return this.paginatedData;
+  }
+
+  getTotalPages(): number {
+    return this.totalPages;
+  }
+
+  getPageNumbers(): number[] {
+    return this.pages;
+  }
+
+  trackByDate(index: number, item: HistoricalDataItem): string {
+    return item.timestamp;
+  }
+
+  exportToCSV() {
+    this.exportToCsv();
+  }
+
   formatCurrency(value: number): string {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -260,71 +293,21 @@ export class HistoricalDataComponent implements OnInit {
     }).format(value);
   }
 
-  /**
-   * Format number with commas
-   */
   formatNumber(value: number): string {
     return new Intl.NumberFormat('en-US').format(value);
   }
 
-  /**
-   * Format percentage
-   */
   formatPercentage(value: number): string {
-    return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
+    return new Intl.NumberFormat('en-US', {
+      style: 'percent',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(value / 100);
   }
 
-  /**
-   * Get change color class
-   */
-  getChangeColorClass(change: number): string {
-    if (change > 0) return 'text-success';
-    if (change < 0) return 'text-danger';
+  getChangeColorClass(value: number): string {
+    if (value > 0) return 'text-success';
+    if (value < 0) return 'text-danger';
     return 'text-muted';
-  }
-
-  /**
-   * Export data to CSV
-   */
-  exportToCSV(): void {
-    if (this.historicalData.length === 0) {
-      return;
-    }
-
-    const headers = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume', 'Change %'];
-    const csvContent = [
-      headers.join(','),
-      ...this.historicalData.map(item => [
-        item.date?.toLocaleDateString() || item.timestamp,
-        item.open.toFixed(2),
-        item.high.toFixed(2),
-        item.low.toFixed(2),
-        item.close.toFixed(2),
-        item.volume,
-        (item.change || 0).toFixed(2)
-      ].join(','))
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${this.selectedSymbol}_historical_data_${this.selectedDays}days.csv`;
-    link.click();
-    window.URL.revokeObjectURL(url);
-  }
-
-  /**
-   * Refresh data
-   */
-  refreshData(): void {
-    this.loadHistoricalData();
-  }
-
-  /**
-   * Track by function for ngFor performance
-   */
-  trackByDate(index: number, item: HistoricalDataItem): string {
-    return item.timestamp;
   }
 }

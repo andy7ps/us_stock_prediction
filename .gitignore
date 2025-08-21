@@ -130,3 +130,4 @@ venv.bak/
 dmypy.json
 database_data/*.db
 frontend/node_modules.zip
+database_data/predictions.db

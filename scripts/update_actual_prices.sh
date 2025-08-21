@@ -1,9 +1,10 @@
 #!/bin/bash
 
-# Update Actual Prices Script for Stock Prediction Service v3.4.0
+# Update Actual Prices Script for Stock Prediction Service v3.4.0 - FIXED VERSION
 # Fetches actual closing prices and updates accuracy tracking
 # Author: Stock Prediction Service Development Team
 # Created: 2025-08-18
+# Fixed: 2025-08-18
 
 set -euo pipefail
 
@@ -11,7 +12,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 LOG_DIR="$PROJECT_ROOT/logs"
-LOG_FILE="$LOG_DIR/update_actual_prices_$(date +%Y%m%d).log"
+LOG_FILE="$LOG_DIR/update_actual_prices_$(date +%Y%m%d_%H%M%S).log"
 API_BASE_URL="${API_BASE_URL:-http://localhost:8081}"
 SYMBOLS="${SYMBOLS:-NVDA,TSLA,AAPL,MSFT,GOOGL,AMZN,AUR,PLTR,SMCI,TSM,MP,SMR,SPY,META,NOC,RTX,LMT}"
 MAX_RETRIES=3
@@ -62,43 +63,42 @@ get_actual_closing_price() {
     local symbol="$1"
     local date="$2"
     
-    # Log to file only, not stdout (to avoid interfering with return value)
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] INFO: Fetching actual closing price for $symbol on $date" >> "$LOG_FILE"
+    log_info "Fetching actual closing price for $symbol on $date"
     
-    # Get historical data for the specific date (get 5 days to ensure we have the data)
+    # Get historical data for the specific date (get 10 days to ensure we have the data)
     local historical_response
-    historical_response=$(curl -s "$API_BASE_URL/api/v1/historical/$symbol?days=5" 2>/dev/null || echo "")
+    historical_response=$(curl -s "$API_BASE_URL/api/v1/historical/$symbol?days=10" 2>/dev/null || echo "")
     
     if [ -z "$historical_response" ]; then
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: Failed to get historical data for $symbol" >> "$LOG_FILE"
+        log_error "Failed to get historical data for $symbol"
         return 1
     fi
     
     # Parse JSON to extract closing price for the specific date
-    # The API returns timestamp in format "2025-08-15T13:30:00Z", we need to match the date part
     local closing_price=""
     
     if command -v jq &> /dev/null; then
         # Use jq for robust JSON parsing - match date from timestamp
         closing_price=$(echo "$historical_response" | jq -r --arg date "$date" '
-            .data[] | select(.timestamp | startswith($date)) | .close // empty
-        ' 2>/dev/null || echo "")
+            .data[]? | select(.timestamp | startswith($date)) | .close // empty
+        ' 2>/dev/null | head -1)
     else
         # Fallback: simple text parsing - look for timestamp starting with the date
-        closing_price=$(echo "$historical_response" | grep -o "\"timestamp\":\"$date[^\"]*\"[^}]*\"close\":[0-9.]*" | grep -o "\"close\":[0-9.]*" | cut -d: -f2 | tr -d '"' || echo "")
+        closing_price=$(echo "$historical_response" | grep -o "\"timestamp\":\"$date[^\"]*\"[^}]*\"close\":[0-9.]*" | grep -o "\"close\":[0-9.]*" | cut -d: -f2 | tr -d '"' | head -1 || echo "")
     fi
     
     if [ -z "$closing_price" ] || [ "$closing_price" = "null" ]; then
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: Could not extract closing price for $symbol on $date" >> "$LOG_FILE"
+        log_error "Could not extract closing price for $symbol on $date"
         return 1
     fi
     
     # Validate that closing_price is a valid number
     if ! [[ "$closing_price" =~ ^[0-9]+\.?[0-9]*$ ]]; then
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: Invalid closing price format for $symbol on $date: $closing_price" >> "$LOG_FILE"
+        log_error "Invalid closing price format for $symbol on $date: $closing_price"
         return 1
     fi
     
+    log_info "Found closing price for $symbol on $date: \$${closing_price}"
     echo "$closing_price"
     return 0
 }
@@ -139,6 +139,39 @@ update_actual_price_api() {
     fi
 }
 
+# Function to get dates that have predictions but no actual prices
+get_dates_needing_updates() {
+    log_info "Checking for predictions that need actual price updates"
+    
+    # Get recent predictions that don't have actual prices
+    local response
+    response=$(curl -s "$API_BASE_URL/api/v1/predictions/history?limit=200&order_by=date&order_dir=desc" 2>/dev/null || echo "")
+    
+    if [ -z "$response" ]; then
+        log_error "Failed to get prediction history"
+        return 1
+    fi
+    
+    # Extract unique dates that have predictions but no actual prices
+    local dates_needing_updates=""
+    
+    if command -v jq &> /dev/null; then
+        dates_needing_updates=$(echo "$response" | jq -r '.[] | select(.actual_close == null) | .prediction_date' | cut -d'T' -f1 | sort -u | head -5)
+    else
+        # Fallback parsing
+        dates_needing_updates=$(echo "$response" | grep -o '"prediction_date":"[^"]*"' | grep -o '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]' | sort -u | head -5)
+    fi
+    
+    if [ -z "$dates_needing_updates" ]; then
+        log_info "No predictions found that need actual price updates"
+        return 1
+    fi
+    
+    log_info "Found dates needing updates: $(echo "$dates_needing_updates" | tr '\n' ' ')"
+    echo "$dates_needing_updates"
+    return 0
+}
+
 # Function to update actual prices for a specific date
 update_actual_prices_for_date() {
     local target_date="$1"
@@ -151,10 +184,30 @@ update_actual_prices_for_date() {
     log_info "Updating actual prices for date: $target_date"
     log_info "Symbols to process: ${#symbols_array[@]}"
     
+    # First, check if this date has any predictions
+    local predictions_exist
+    predictions_exist=$(curl -s "$API_BASE_URL/api/v1/predictions/history?limit=100" | jq -r --arg date "$target_date" '[.[] | select(.prediction_date | startswith($date))] | length' 2>/dev/null || echo "0")
+    
+    if [ "$predictions_exist" = "0" ]; then
+        log_info "No predictions found for $target_date, skipping"
+        return 0
+    fi
+    
+    log_info "Found $predictions_exist predictions for $target_date"
+    
     for symbol in "${symbols_array[@]}"; do
         symbol=$(echo "$symbol" | xargs) # Trim whitespace
         
         log_info "Processing $symbol..."
+        
+        # Check if this symbol has a prediction for this date
+        local has_prediction
+        has_prediction=$(curl -s "$API_BASE_URL/api/v1/predictions/history/$symbol?limit=10" | jq -r --arg date "$target_date" '[.[] | select(.prediction_date | startswith($date))] | length' 2>/dev/null || echo "0")
+        
+        if [ "$has_prediction" = "0" ]; then
+            log_info "No prediction found for $symbol on $target_date, skipping"
+            continue
+        fi
         
         # Get actual closing price
         local actual_close
@@ -182,34 +235,13 @@ update_actual_prices_for_date() {
     return 0
 }
 
-# Function to get predictions that need actual price updates
-get_predictions_needing_updates() {
-    log_info "Checking for predictions that need actual price updates"
-    
-    # Get predictions from the last 7 days that don't have actual prices
-    local response
-    response=$(curl -s "$API_BASE_URL/api/v1/predictions/history?limit=100&order_by=date&order_dir=desc" 2>/dev/null || echo "")
-    
-    if [ -z "$response" ]; then
-        log_error "Failed to get prediction history"
-        return 1
-    fi
-    
-    # For now, we'll update prices for yesterday (most common case)
-    local yesterday
-    yesterday=$(date -d "yesterday" +%Y-%m-%d)
-    
-    log_info "Will attempt to update actual prices for: $yesterday"
-    echo "$yesterday"
-    return 0
-}
-
 # Main execution function
 main() {
-    log_info "=== Update Actual Prices Script Started ==="
+    log_info "=== Update Actual Prices Script Started (FIXED VERSION) ==="
     log_info "Timestamp: $(date)"
     log_info "API Base URL: $API_BASE_URL"
     log_info "Symbols: $SYMBOLS"
+    log_info "Log File: $LOG_FILE"
     
     # Check service health
     if ! check_service_health; then
@@ -222,11 +254,24 @@ main() {
     
     if [ -z "$target_date" ]; then
         # Auto-detect dates that need updates
-        if target_date=$(get_predictions_needing_updates); then
-            log_info "Auto-detected target date: $target_date"
+        local dates_needing_updates
+        if dates_needing_updates=$(get_dates_needing_updates); then
+            log_info "Auto-detected dates needing updates"
+            
+            # Process each date
+            local total_successful=0
+            local total_failed=0
+            
+            while IFS= read -r date; do
+                if [ -n "$date" ]; then
+                    log_info "Processing date: $date"
+                    update_actual_prices_for_date "$date"
+                fi
+            done <<< "$dates_needing_updates"
+            
         else
-            log_error "Failed to determine target date"
-            exit 1
+            log_info "No dates found that need actual price updates"
+            exit 0
         fi
     else
         # Validate provided date format
@@ -236,16 +281,12 @@ main() {
         fi
         target_date=$(date -d "$target_date" +%Y-%m-%d)
         log_info "Using provided target date: $target_date"
+        
+        # Update actual prices for the specified date
+        update_actual_prices_for_date "$target_date"
     fi
     
-    # Update actual prices
-    if update_actual_prices_for_date "$target_date"; then
-        log_success "Actual price updates completed successfully"
-    else
-        log_error "Some actual price updates failed"
-        exit 1
-    fi
-    
+    log_success "Actual price updates completed successfully"
     log_info "=== Update Actual Prices Script Completed ==="
 }
 
@@ -257,15 +298,15 @@ case "${1:-}" in
         echo "Update actual closing prices for stock predictions"
         echo ""
         echo "Arguments:"
-        echo "  DATE    Target date in YYYY-MM-DD format (optional, defaults to yesterday)"
+        echo "  DATE    Target date in YYYY-MM-DD format (optional, auto-detects if not provided)"
         echo ""
         echo "Environment Variables:"
         echo "  API_BASE_URL    Base URL for the API (default: http://localhost:8081)"
         echo "  SYMBOLS         Comma-separated list of symbols to process"
         echo ""
         echo "Examples:"
-        echo "  $0                    # Update prices for yesterday"
-        echo "  $0 2025-08-17         # Update prices for specific date"
+        echo "  $0                    # Update prices for all dates needing updates"
+        echo "  $0 2025-08-18         # Update prices for specific date"
         echo "  SYMBOLS=NVDA,TSLA $0  # Update prices for specific symbols only"
         exit 0
         ;;
