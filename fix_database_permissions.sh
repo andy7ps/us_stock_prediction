@@ -27,9 +27,9 @@ echo "👤 Setting ownership to UID:GID $DOCKER_USER_ID:$DOCKER_GROUP_ID"
 # Fix ownership of database directory and files
 sudo chown -R $DOCKER_USER_ID:$DOCKER_GROUP_ID "$DATABASE_DIR"
 
-# Ensure proper permissions
-sudo chmod -R 755 "$DATABASE_DIR"
-sudo chmod 664 "$DATABASE_DIR"/*.db 2>/dev/null || true
+# Ensure proper permissions for both Docker container and local scripts
+sudo chmod 777 "$DATABASE_DIR"  # Allow local scripts to write
+sudo chmod 666 "$DATABASE_DIR"/*.db 2>/dev/null || true  # Allow local scripts to write to DB
 
 echo "✅ Database permissions fixed successfully!"
 
@@ -39,5 +39,7 @@ echo "📋 Current permissions:"
 ls -la "$DATABASE_DIR"
 
 echo ""
-echo "🎯 The database files are now owned by the Docker container user (1001:1001)"
-echo "   This should resolve the 'readonly database' error in the frontend."
+echo "🎯 The database files are now accessible by:"
+echo "   - Docker container user (1001:1001) for frontend operations"
+echo "   - Local user for cron job scripts and manual operations"
+echo "   This should resolve both 'readonly database' errors and cron job failures."
