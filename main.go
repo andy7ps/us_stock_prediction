@@ -36,7 +36,7 @@ func main() {
 
 	// Setup logger
 	logger := setupLogger(cfg)
-	logger.Info("Starting Stock Prediction Service v3.4.0")
+	logger.Info("Starting Stock Prediction Service v3.5.0")
 
 	// Initialize metrics
 	metricsCollector := metrics.NewMetrics()
@@ -76,9 +76,11 @@ func main() {
 	// Initialize handlers
 	handler := handlers.NewHandler(cfg, logger, metricsCollector, yahooClient, predictionService)
 	predictionTrackingHandler := handlers.NewPredictionTrackingHandler(predictionTrackerService, accuracyCalculatorService)
+	chartHandler := handlers.NewChartHandler(yahooClient)
+	searchHistoryHandler := handlers.NewSearchHistoryHandler(db)
 
 	// Setup router
-	router := setupRouter(handler, predictionTrackingHandler)
+	router := setupRouter(handler, predictionTrackingHandler, chartHandler, searchHistoryHandler)
 
 	// Create HTTP server
 	server := &http.Server{
@@ -153,7 +155,7 @@ func setupLogger(cfg *config.Config) *logrus.Logger {
 	return logger
 }
 
-func setupRouter(handler *handlers.Handler, predictionTrackingHandler *handlers.PredictionTrackingHandler) *mux.Router {
+func setupRouter(handler *handlers.Handler, predictionTrackingHandler *handlers.PredictionTrackingHandler, chartHandler *handlers.ChartHandler, searchHistoryHandler *handlers.SearchHistoryHandler) *mux.Router {
 	router := mux.NewRouter()
 
 	// Add middleware
@@ -170,6 +172,18 @@ func setupRouter(handler *handlers.Handler, predictionTrackingHandler *handlers.
 	api.HandleFunc("/predict/{symbol}", handler.PredictHandler).Methods("GET", "OPTIONS")
 	api.HandleFunc("/historical/{symbol}", handler.HistoricalDataHandler).Methods("GET", "OPTIONS")
 	
+	// Chart endpoints
+	api.HandleFunc("/chart/{symbol}", chartHandler.GetChartData).Methods("GET", "OPTIONS")
+	api.HandleFunc("/chart/{symbol}/intraday", chartHandler.GetIntradayData).Methods("GET", "OPTIONS")
+	api.HandleFunc("/quote/{symbol}", chartHandler.GetCurrentQuote).Methods("GET", "OPTIONS")
+	
+	// Search history endpoints
+	api.HandleFunc("/search-history", searchHistoryHandler.GetSearchHistory).Methods("GET", "OPTIONS")
+	api.HandleFunc("/search-history", searchHistoryHandler.RecordSearch).Methods("POST", "OPTIONS")
+	api.HandleFunc("/search-history", searchHistoryHandler.ClearSearchHistory).Methods("DELETE", "OPTIONS")
+	api.HandleFunc("/search-history/popular", searchHistoryHandler.GetPopularStocks).Methods("GET", "OPTIONS")
+	api.HandleFunc("/search-history/recent", searchHistoryHandler.GetRecentSearches).Methods("GET", "OPTIONS")
+	
 	// Management endpoints
 	api.HandleFunc("/health", handler.HealthHandler).Methods("GET", "OPTIONS")
 	api.HandleFunc("/stats", handler.StatsHandler).Methods("GET", "OPTIONS")
@@ -185,7 +199,7 @@ func setupRouter(handler *handlers.Handler, predictionTrackingHandler *handlers.
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		response := map[string]interface{}{
 			"service": "Stock Prediction API",
-			"version": "v3.4.0",
+			"version": "v3.5.0",
 			"status":  "running",
 			"time":    time.Now().Format(time.RFC3339),
 			"features": []string{
@@ -194,11 +208,23 @@ func setupRouter(handler *handlers.Handler, predictionTrackingHandler *handlers.
 				"Daily prediction tracking",
 				"Accuracy analysis",
 				"Performance metrics",
+				"Candlestick charts",
+				"Search history",
 			},
 			"endpoints": map[string]interface{}{
 				"predictions": map[string]string{
 					"predict":     "/api/v1/predict/{symbol}",
 					"historical":  "/api/v1/historical/{symbol}",
+				},
+				"charts": map[string]string{
+					"chart_data": "/api/v1/chart/{symbol}",
+					"intraday":   "/api/v1/chart/{symbol}/intraday",
+					"quote":      "/api/v1/quote/{symbol}",
+				},
+				"search": map[string]string{
+					"history":        "/api/v1/search-history",
+					"popular":        "/api/v1/search-history/popular",
+					"recent":         "/api/v1/search-history/recent",
 				},
 				"tracking": map[string]string{
 					"daily_run":        "/api/v1/predictions/daily-run",

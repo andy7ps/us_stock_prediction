@@ -1,0 +1,146 @@
+<!-- Navigation Bar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+  <div class="container-fluid">
+    <!-- Brand -->
+    <a class="navbar-brand fw-bold" routerLink="/dashboard">
+      <i class="fas fa-chart-line me-2"></i>
+      Stock Prediction v3.5.0
+    </a>
+
+    <!-- Mobile Toggle -->
+    <button 
+      class="navbar-toggler" 
+      type="button" 
+      data-bs-toggle="collapse" 
+      data-bs-target="#navbarNav"
+      aria-controls="navbarNav" 
+      aria-expanded="false" 
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <!-- Navigation Links -->
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item">
+          <a 
+            class="nav-link" 
+            routerLink="/dashboard" 
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{exact: true}"
+          >
+            <i class="fas fa-tachometer-alt me-1"></i>
+            Dashboard
+          </a>
+        </li>
+        <li class="nav-item">
+          <a 
+            class="nav-link" 
+            routerLink="/predictions" 
+            routerLinkActive="active"
+          >
+            <i class="fas fa-brain me-1"></i>
+            Predictions
+          </a>
+        </li>
+        <li class="nav-item">
+          <a 
+            class="nav-link" 
+            routerLink="/charts" 
+            routerLinkActive="active"
+          >
+            <i class="fas fa-chart-candlestick me-1"></i>
+            Charts
+          </a>
+        </li>
+        <li class="nav-item">
+          <a 
+            class="nav-link" 
+            routerLink="/historical" 
+            routerLinkActive="active"
+          >
+            <i class="fas fa-history me-1"></i>
+            Historical Data
+          </a>
+        </li>
+        <li class="nav-item">
+          <a 
+            class="nav-link" 
+            routerLink="/accuracy" 
+            routerLinkActive="active"
+          >
+            <i class="fas fa-bullseye me-1"></i>
+            Accuracy
+          </a>
+        </li>
+      </ul>
+
+      <!-- Right Side Info -->
+      <ul class="navbar-nav">
+        <li class="nav-item dropdown">
+          <a 
+            class="nav-link dropdown-toggle" 
+            href="#" 
+            id="navbarDropdown" 
+            role="button" 
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+          >
+            <i class="fas fa-info-circle me-1"></i>
+            System Info
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><h6 class="dropdown-header">System Status</h6></li>
+            <li>
+              <span class="dropdown-item-text">
+                <i class="fas fa-circle text-success me-2"></i>
+                API: Online
+              </span>
+            </li>
+            <li>
+              <span class="dropdown-item-text">
+                <i class="fas fa-database text-success me-2"></i>
+                Database: Connected
+              </span>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <span class="dropdown-item-text">
+                <small class="text-muted">Version: v3.4.0</small>
+              </span>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Main Content Area -->
+<main class="main-content">
+  <router-outlet></router-outlet>
+</main>
+
+<!-- Footer -->
+<footer class="footer bg-light border-top mt-5">
+  <div class="container-fluid py-3">
+    <div class="row align-items-center">
+      <div class="col-md-6">
+        <small class="text-muted">
+          © 2025 Stock Prediction Service v3.5.0 - 
+          <a href="https://github.com/andy7ps/us_stock_prediction" target="_blank" class="text-decoration-none">
+            <i class="fab fa-github me-1"></i>
+            GitHub
+          </a>
+        </small>
+      </div>
+      <div class="col-md-6 text-md-end">
+        <small class="text-muted">
+          <i class="fas fa-clock me-1"></i>
+          Last Updated: {{ currentTime | date:'medium' }}
+        </small>
+      </div>
+    </div>
+  </div>
+</footer>

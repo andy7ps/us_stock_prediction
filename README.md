@@ -1,4 +1,4 @@
-# 📈 US Stock Prediction Service v3.4.0
+# 📈 US Stock Prediction Service v3.5.0
 
 [![Go Version](https://img.shields.io/badge/Go-1.23+-blue.svg)](https://golang.org)
 [![Python Version](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org)
@@ -6,7 +6,7 @@
 [![Bootstrap Version](https://img.shields.io/badge/Bootstrap-5.3.3-purple.svg)](https://getbootstrap.com)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://docker.com)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Release](https://img.shields.io/badge/Release-v3.4.0-brightgreen.svg)](https://github.com/andy7ps/us_stock_prediction/releases/tag/v3.4.0)
+[![Release](https://img.shields.io/badge/Release-v3.5.0-brightgreen.svg)](https://github.com/andy7ps/us_stock_prediction/releases/tag/v3.5.0)
 [![Production Ready](https://img.shields.io/badge/Production-Ready-success.svg)](#production-deployment)
 
 > **Full-stack enterprise-grade stock price prediction service with Bootstrap-enhanced Angular frontend, Go backend, persistent storage, advanced LSTM neural networks, ensemble ML intelligence, and comprehensive monitoring.**
@@ -25,6 +25,9 @@ The US Stock Prediction Service is a **production-ready, full-stack enterprise-g
 - **🔄 Intelligent Caching**: High-performance caching with 85%+ hit rates
 - **🐳 Docker Ready**: Complete containerization with Docker Compose
 - **🛡️ Production Security**: Secure, scalable, and maintainable architecture
+- **📊 Interactive Charts**: Professional candlestick charts with TradingView integration *(New in v3.5.0)*
+- **🔍 Smart Search**: Intelligent symbol search with history tracking *(New in v3.5.0)*
+- **🎯 Dashboard Interface**: Comprehensive dashboard with navigation system *(New in v3.5.0)*
 
 ## 🚀 **Quick Start (60 seconds)**
 
