@@ -53,7 +53,7 @@ export class StockPredictionComponent implements OnInit, OnDestroy {
   activeModels = '13';
   avgConfidence = '82.3';
   
-  popularStocks = ['NVDA', 'TSLA', 'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'AUR', 'PLTR', 'SMCI', 'TSM', 'MP', 'SMR', 'SPY'];
+  popularStocks = ['NVDA', 'TSLA', 'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'AUR', 'PLTR', 'SMCI', 'TSM', 'MP', 'SMR', 'SPY', 'NOC', 'RTX', 'LMT', 'COIN', 'BRK/B'];
   
   private healthCheckSubscription?: Subscription;
   private apiBaseUrl: string;

@@ -36,7 +36,7 @@ func main() {
 
 	// Setup logger
 	logger := setupLogger(cfg)
-	logger.Info("Starting Stock Prediction Service v3.5.0")
+	logger.Info("Starting Stock Prediction Service v3.6.0")
 
 	// Initialize metrics
 	metricsCollector := metrics.NewMetrics()
@@ -77,7 +77,7 @@ func main() {
 	handler := handlers.NewHandler(cfg, logger, metricsCollector, yahooClient, predictionService)
 	predictionTrackingHandler := handlers.NewPredictionTrackingHandler(predictionTrackerService, accuracyCalculatorService)
 	chartHandler := handlers.NewChartHandler(yahooClient)
-	searchHistoryHandler := handlers.NewSearchHistoryHandler(db)
+	searchHistoryHandler := handlers.NewSearchHistoryHandler(db.GetDB())
 
 	// Setup router
 	router := setupRouter(handler, predictionTrackingHandler, chartHandler, searchHistoryHandler)
@@ -199,7 +199,7 @@ func setupRouter(handler *handlers.Handler, predictionTrackingHandler *handlers.
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		response := map[string]interface{}{
 			"service": "Stock Prediction API",
-			"version": "v3.5.0",
+			"version": "v3.6.0",
 			"status":  "running",
 			"time":    time.Now().Format(time.RFC3339),
 			"features": []string{
