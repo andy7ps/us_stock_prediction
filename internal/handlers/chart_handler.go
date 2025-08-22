@@ -4,22 +4,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
-	"time"
 
 	"github.com/gorilla/mux"
 	"stock-prediction-us/internal/models"
-	"stock-prediction-us/internal/services"
+	"stock-prediction-us/internal/services/yahoo"
 )
 
 type ChartHandler struct {
-	yahooService *services.YahooService
+	yahooClient *yahoo.Client
 }
 
-func NewChartHandler(yahooService *services.YahooService) *ChartHandler {
+func NewChartHandler(yahooClient *yahoo.Client) *ChartHandler {
 	return &ChartHandler{
-		yahooService: yahooService,
+		yahooClient: yahooClient,
 	}
 }
 
@@ -47,8 +45,8 @@ func (h *ChartHandler) GetChartData(w http.ResponseWriter, r *http.Request) {
 	// Convert time range to days
 	days := convertTimeRangeToDays(timeRange)
 	
-	// Get historical data from Yahoo service
-	historicalData, err := h.yahooService.GetHistoricalData(symbol, days)
+	// Get historical data from Yahoo client
+	historicalData, err := h.yahooClient.FetchHistoricalData(symbol, days)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to fetch data for %s: %v", symbol, err), http.StatusInternalServerError)
 		return
@@ -125,7 +123,7 @@ func (h *ChartHandler) GetIntradayData(w http.ResponseWriter, r *http.Request) {
 
 	// For now, return 1-day data as intraday
 	// In a real implementation, you'd fetch actual intraday data
-	historicalData, err := h.yahooService.GetHistoricalData(symbol, 1)
+	historicalData, err := h.yahooClient.FetchHistoricalData(symbol, 1)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to fetch intraday data for %s: %v", symbol, err), http.StatusInternalServerError)
 		return
@@ -179,7 +177,7 @@ func (h *ChartHandler) GetCurrentQuote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get latest data (1 day)
-	historicalData, err := h.yahooService.GetHistoricalData(symbol, 1)
+	historicalData, err := h.yahooClient.FetchHistoricalData(symbol, 1)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to fetch quote for %s: %v", symbol, err), http.StatusInternalServerError)
 		return

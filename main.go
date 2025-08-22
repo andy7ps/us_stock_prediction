@@ -36,7 +36,7 @@ func main() {
 
 	// Setup logger
 	logger := setupLogger(cfg)
-	logger.Info("Starting Stock Prediction Service v3.5.0")
+	logger.Info("Starting Stock Prediction Service v3.6.0")
 
 	// Initialize metrics
 	metricsCollector := metrics.NewMetrics()
@@ -77,7 +77,7 @@ func main() {
 	handler := handlers.NewHandler(cfg, logger, metricsCollector, yahooClient, predictionService)
 	predictionTrackingHandler := handlers.NewPredictionTrackingHandler(predictionTrackerService, accuracyCalculatorService)
 	chartHandler := handlers.NewChartHandler(yahooClient)
-	searchHistoryHandler := handlers.NewSearchHistoryHandler(db)
+	searchHistoryHandler := handlers.NewSearchHistoryHandler(db.GetDB())
 
 	// Setup router
 	router := setupRouter(handler, predictionTrackingHandler, chartHandler, searchHistoryHandler)
