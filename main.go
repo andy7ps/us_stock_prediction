@@ -199,7 +199,7 @@ func setupRouter(handler *handlers.Handler, predictionTrackingHandler *handlers.
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		response := map[string]interface{}{
 			"service": "Stock Prediction API",
-			"version": "v3.5.0",
+			"version": "v3.6.0",
 			"status":  "running",
 			"time":    time.Now().Format(time.RFC3339),
 			"features": []string{

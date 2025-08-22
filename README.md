@@ -1,4 +1,4 @@
-# 📈 US Stock Prediction Service v3.5.0
+# 📈 US Stock Prediction Service v3.6.0
 
 [![Go Version](https://img.shields.io/badge/Go-1.23+-blue.svg)](https://golang.org)
 [![Python Version](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org)
@@ -6,7 +6,7 @@
 [![Bootstrap Version](https://img.shields.io/badge/Bootstrap-5.3.3-purple.svg)](https://getbootstrap.com)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://docker.com)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Release](https://img.shields.io/badge/Release-v3.5.0-brightgreen.svg)](https://github.com/andy7ps/us_stock_prediction/releases/tag/v3.5.0)
+[![Release](https://img.shields.io/badge/Release-v3.6.0-brightgreen.svg)](https://github.com/andy7ps/us_stock_prediction/releases/tag/v3.6.0)
 [![Production Ready](https://img.shields.io/badge/Production-Ready-success.svg)](#production-deployment)
 
 > **Full-stack enterprise-grade stock price prediction service with Bootstrap-enhanced Angular frontend, Go backend, persistent storage, advanced LSTM neural networks, ensemble ML intelligence, and comprehensive monitoring.**
@@ -28,6 +28,9 @@ The US Stock Prediction Service is a **production-ready, full-stack enterprise-g
 - **📊 Interactive Charts**: Professional candlestick charts with TradingView integration *(New in v3.5.0)*
 - **🔍 Smart Search**: Intelligent symbol search with history tracking *(New in v3.5.0)*
 - **🎯 Dashboard Interface**: Comprehensive dashboard with navigation system *(New in v3.5.0)*
+- **🏭 Defense & Crypto Stocks**: Support for NOC, RTX, LMT, COIN, BRK/B symbols *(New in v3.6.0)*
+- **🤖 Enhanced ML Training**: Symbol-specific LSTM configurations and automated training *(New in v3.6.0)*
+- **📈 Expanded Coverage**: 19 total symbols across all major market sectors *(New in v3.6.0)*
 
 ## 🚀 **Quick Start (60 seconds)**
 
@@ -561,11 +564,16 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🔮 **Roadmap**
 
-### **v3.2 (Planned)**
-- Database integration (PostgreSQL)
+### **v3.7 (Planned)**
 - Advanced ML models (Transformer, GRU)
 - Real-time WebSocket API
 - Multi-timeframe predictions
+- Enhanced portfolio analysis
+
+### **v3.8 (Future)**
+- Database integration (PostgreSQL)
+- Advanced analytics dashboard
+- Mobile app integration
 
 ### **v4.0 (Future)**
 - Cloud-native deployment

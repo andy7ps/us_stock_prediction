@@ -141,7 +141,7 @@ fi
 print_status "Creating ML configuration..."
 cat > persistent_data/ml_config.json << EOF
 {
-    "model_version": "v3.3.0",
+    "model_version": "v3.6.0",
     "created_date": "$(date -Iseconds)",
     "models": {
         "lstm": {
@@ -179,9 +179,9 @@ if [ -f ".env" ]; then
     fi
     
     if grep -q "ML_MODEL_VERSION" .env; then
-        sed -i 's|ML_MODEL_VERSION=.*|ML_MODEL_VERSION=v3.3.0|' .env
+        sed -i 's|ML_MODEL_VERSION=.*|ML_MODEL_VERSION=v3.6.0|' .env
     else
-        echo "ML_MODEL_VERSION=v3.3.0" >> .env
+        echo "ML_MODEL_VERSION=v3.6.0" >> .env
     fi
 else
     # Create new .env file
